@@ -7,7 +7,7 @@ The RP2040 acts as the ROM chip of the cart.
 In order to load a game onto the cartridge, you first have a "convert" a ROM to a UF2 file.
 
 ### Using the Online Patcher
-You can use the [online patcher tool](https://zwenergy.github.io/picoDuckSingleROMPatch/index.html) to patch in a ROM into the ROM-less base UF2 firmware.
+You can use the [online patcher tool](https://zwenergy.github.io/PM2040ROMPatch/) to patch in a ROM into the ROM-less base UF2 firmware.
 You can find the latest ROM-less base UF2 firmware in the releases tab.
 Maximum ROM file size is currently 524288 bytes.
 
