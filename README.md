@@ -9,7 +9,7 @@ In order to load a game onto the cartridge, you first have a "convert" a ROM to 
 ### Using the Online Patcher
 You can use the [online patcher tool](https://zwenergy.github.io/PM2040ROMPatch/) to patch in a ROM into the ROM-less base UF2 firmware.
 You can find the latest ROM-less base UF2 firmware in the releases tab.
-Maximum ROM file size is currently 1048576 bytes.
+Maximum ROM file size is currently 1048576 bytes (1 MB).
 
 ### Building a FW from Scratch
 
