@@ -33,7 +33,7 @@ with open( dstFile, "w" ) as f:
   # First, define the address mask.
   addressBits = math.ceil( math.log2( len( outStr ) ) )
   
-  curLine = "const uint8_t rom[ " + str( len( outStr ) ) + " ] __attribute__ ((aligned ( 524288 ))) = {\n"
+  curLine = "const uint8_t rom[ " + str( len( outStr ) ) + ' ] __attribute__ ((section(".romStorage"))) = {\n'
   f.write( curLine )
   tmpCnt = 0
   firstLine = True
