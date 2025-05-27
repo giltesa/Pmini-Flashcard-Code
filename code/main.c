@@ -158,9 +158,10 @@ void __not_in_flash_func( doPIOStuff() ) {
 int main() {
   
   // Set higher freq.
+  sleep_ms(2);
   vreg_set_voltage(VREG_VOLTAGE_1_30);
   sleep_ms(2);
-  set_sys_clock_khz(260000, true);
+  set_sys_clock_khz(240000, true);
   
   doPIOStuff();
   
