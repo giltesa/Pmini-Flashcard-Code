@@ -28,8 +28,13 @@ Maximum ROM file size is currently 1048576 bytes (1 MB).
 ### BOM
 | **Reference** | **Value**| **Links**
 |---------------|----------|----------|
-| U3 | RP2040-Zero board ||
+| U3 | RP2040-Zero board (**not** with pre-soldered pin header) ||
 | R1, R2 | 100 kOhm resistor (0805) |[LCSC](https://www.lcsc.com/product-detail/Chip-Resistor-Surface-Mount_YAGEO-RC0805FR-07100KL_C96346.html)|
+
+**Note:** I would recommend to get an "authentic" WaveShare RP2040-Zero board and not a clone.
+Clones may use different parts, e.g., different Flash chips, which could end up not working as the PM2040 is quite pushing the timings of the RP2040, as well as the Flash chip.
+[See here](https://www.waveshare.com/wiki/RP2040-Zero#Anti-piracy_statement) for recommendations for spotting fakes.
+
 
 ### PCB
 The PCB can be ordered using the Gerber files. A width of **1.0 mm** should be chosen with ENIG surface.
