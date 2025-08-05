@@ -5,3 +5,8 @@ GoogleSketchUp
 *.s#*
 *.b#*
 *.skb
+*.min
+*.eep
+*.src
+obj/*
+*.obj
