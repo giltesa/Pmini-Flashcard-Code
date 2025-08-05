@@ -10,3 +10,4 @@ GoogleSketchUp
 *.src
 obj/*
 *.obj
+build/
