@@ -168,14 +168,15 @@ void __not_in_flash_func( doPIOStuff() ) {
   #else
   lale_latch_menu_program_init( pio, sm_lale, offset_lale, A0A10, LALE );
   #endif
-  
+
   // Push the base address of the array.
   #ifndef MULTICART
   pio_sm_put( pio, sm_lale, ( ( (uint32_t) rom + XIP_NOCACHE_OFFSET ) ) >> 20 );
   #else
-  pio_sm_put( pio, sm_lale, ( ( (uint32_t) rom_menu + XIP_NOCACHE_OFFSET ) ) >> 14 );
+  //pio_sm_put( pio, sm_lale, ( ( (uint32_t) rom_menu + XIP_NOCACHE_OFFSET ) ) >> 14 );
+  pio_sm_put( pio, sm_lale, ( ( (uint32_t) rom_menu + XIP_NOCACHE_OFFSET ) ) >> 15 );   //Allows a bigger multirom.min file size
   #endif
-  
+
   // Start the DMA channels.
   dma_start_channel_mask( 1u << hale_dma );
   dma_start_channel_mask( 1u << lale_addr_dma );
