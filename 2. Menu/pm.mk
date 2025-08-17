@@ -84,3 +84,18 @@ clean:
 	$(RM) $(OBJS)
 	$(RM) $(TARGET).out $(TARGET).sre $(TARGET).map $(TARGET).hex
 	$(RM) $(TARGET).min
+
+
+# --- Automatic post-build cleanup: keep only the .min ---
+.PHONY: final
+
+all: final
+
+final: $(TARGET).min
+	@echo Removing intermediate files...
+	-@del /Q /F *.obj 2>nul || rm -f *.obj
+	-@del /Q /F src\*.obj 2>nul || rm -f src/*.obj
+	-@del /Q /F "$(TARGET).sre" "$(TARGET).map" "$(TARGET).out" "$(TARGET).hex" 2>nul || \
+		rm -f "$(TARGET).sre" "$(TARGET).map" "$(TARGET).out" "$(TARGET).hex"
+# --- end block ---
+
