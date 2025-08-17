@@ -6,9 +6,9 @@
 #include "rom.h"
 #else
 #include "multirom.h"
-#include "multimenu.h"
+//#include "multimenu.h"
 // For 16 MB Flash IC
-//#include "multimenu_20slots.h"
+#include "multimenu_20slots.h"
 #endif
 
 #include "hardware/clocks.h"
@@ -71,20 +71,20 @@
 
 void __not_in_flash_func( doPIOStuff() ) {
   // Set up PIOs.
-  
+
   // OE toggle program.
   PIO pio = pio0;
   uint sm_oe = pio_claim_unused_sm( pio, false );
   uint offset_oe = pio_add_program( pio, &oe_toggle_program );
-  
+
   // Push byte out.
   uint sm_pushData = pio_claim_unused_sm( pio, false );
   uint offset_pushData = pio_add_program( pio, &push_databits_program );
-  
+
   // HALE latching.
   uint sm_hale = pio_claim_unused_sm( pio, false );
   uint offset_hale = pio_add_program( pio, &hale_latch_program );
-  
+
   // LALE latching.
   uint sm_lale = pio_claim_unused_sm( pio, false );
   #ifndef MULTICART
@@ -92,14 +92,14 @@ void __not_in_flash_func( doPIOStuff() ) {
   #else
   uint offset_lale = pio_add_program( pio, &lale_latch_menu_program );
   #endif
-  
-  
+
+
   // Create DMAs.
   int hale_dma = dma_claim_unused_channel( true );
   int lale_addr_dma = dma_claim_unused_channel( true );
   int data_dma = dma_claim_unused_channel( true );
-  
-  
+
+
   // Move high address to LALE SM.
   dma_channel_config c = dma_channel_get_default_config( hale_dma );
 
@@ -116,7 +116,7 @@ void __not_in_flash_func( doPIOStuff() ) {
     1,                                          // Halt after each read
     false                                       // Don't start yet
   );
-  
+
   // Move the adress from LALE SM to the third DMA channel.
   c = dma_channel_get_default_config( lale_addr_dma );
 
@@ -124,10 +124,10 @@ void __not_in_flash_func( doPIOStuff() ) {
   channel_config_set_read_increment( &c, false );
   channel_config_set_write_increment( &c, false );
   channel_config_set_dreq( &c, pio_get_dreq( pio, sm_lale, false) );
-  
+
   channel_config_set_chain_to( &c, hale_dma );     // Trigger the HALE channel again when done
-  
-  
+
+
 
   dma_channel_configure(
     lale_addr_dma,
@@ -137,8 +137,8 @@ void __not_in_flash_func( doPIOStuff() ) {
     1,                                          // Halt after each read
     false                                       // Don't start yet
   );
-  
-  
+
+
   // Read the actual data.
   c = dma_channel_get_default_config( data_dma );
 
@@ -146,7 +146,7 @@ void __not_in_flash_func( doPIOStuff() ) {
   channel_config_set_read_increment( &c, false );
   channel_config_set_write_increment( &c, false );
   channel_config_set_chain_to( &c, lale_addr_dma );     // Trigger the LALE channel again when done
-  
+
   // Set to high priority.
   channel_config_set_high_priority( &c, true );
 
@@ -158,7 +158,7 @@ void __not_in_flash_func( doPIOStuff() ) {
     1,                                          // Halt after each read
     false                                       // Don't start yet
   );
-  
+
   // Start the SMs.
   oe_toggle_program_init( pio, sm_oe, offset_oe, D0, OE );
   push_databits_program_init( pio, sm_pushData, offset_pushData, D0 );
@@ -191,12 +191,12 @@ void __not_in_flash_func( doPIOStuff() ) {
   uint sm_we = pio_claim_unused_sm( pioWE, false );
   uint offset_we = pio_add_program( pioWE, &write_check_program );
   write_check_program_init( pioWE, sm_we, offset_we, D0, WE );
-  
+
   // Start the write addres SM.
   uint sm_we_addr = pio_claim_unused_sm( pioWE, false );
   uint offset_we_addr = pio_add_program( pioWE, &write_check_addr_program );
   write_check_addr_program_init( pioWE, sm_we_addr, offset_we_addr, A0A10, WE );
-  
+
   // Wait till proper write.
   uint32_t writeData;
   uint32_t addrData;
@@ -205,39 +205,39 @@ void __not_in_flash_func( doPIOStuff() ) {
       // Got a write. Right lower address?
       writeData = pio_sm_get( pioWE, sm_we );
       addrData = pio_sm_get( pioWE, sm_we_addr );
-      
+
       if ( addrData == 0x3FF ) {
         // Fitting lower address.
         break;
       }
-      
+
     }
   }
-  
+
   uint32_t romAddress = (uint32_t) rom;
   romAddress += (ROMSIZE * writeData);
-  
+
   // Stop the LALE SM.
   pio_sm_set_enabled( pio, sm_lale, false );
-  
+
   // Remove the old program.
   pio_remove_program( pio, &lale_latch_menu_program, offset_lale );
-  
+
   // Add the new program at the same offset.
   pio_add_program_at_offset( pio, &lale_latch_program, offset_lale );
-  
+
   // Restart the LALE SM.
   lale_latch_program_init( pio, sm_lale, offset_lale, A0A10, LALE );
-  
+
   // Add the new ROM address.
   pio_sm_put( pio, sm_lale, ( ( romAddress + XIP_NOCACHE_OFFSET ) ) >> 19 );
-  
+
   // Stop WE checking SMs.
   pio_sm_set_enabled( pioWE, sm_we, false );
   pio_sm_set_enabled( pioWE, sm_we_addr, false );
   #endif
 
-  
+
   // Do nothing.
   while ( 1 ) {
     tight_loop_contents();
@@ -245,14 +245,14 @@ void __not_in_flash_func( doPIOStuff() ) {
 }
 
 int main() {
-  
+
   // Set higher freq.
   sleep_ms(2);
   vreg_set_voltage(VREG_VOLTAGE_1_30);
   sleep_ms(2);
   set_sys_clock_khz(240000, true);
-  
+
   doPIOStuff();
-  
+
   return 0;
 }
