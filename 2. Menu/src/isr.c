@@ -77,5 +77,6 @@ void _interrupt(0) cartridge_irq(void) {
 
 void _exit( int i )
 {
+  (void)i;
   _int(0x48);
 }
