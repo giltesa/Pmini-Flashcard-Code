@@ -1,0 +1,330 @@
+:root {
+	--radius: 14px
+}
+
+:root[data-theme="light"] {
+	--bg: #f7f8fb;
+	--card: #ffffff;
+	--muted: #5b657a;
+	--txt: #0e1320;
+	--acc: #0ea5e9;
+	--danger: #c02626;
+	--ok: #15803d;
+	--border: #dfe5f0
+}
+
+:root[data-theme="dark"] {
+	--bg: #0c0d10;
+	--card: #151821;
+	--muted: #8a93a6;
+	--txt: #e7ecf7;
+	--acc: #5ac8fa;
+	--danger: #ff6b6b;
+	--ok: #34c759;
+	--border: #1f2533
+}
+
+* {
+	box-sizing: border-box
+}
+
+body {
+	margin: 0;
+	font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Helvetica, Arial, sans-serif;
+	background: var(--bg) url('../img/background.png') repeat;
+	color: var(--txt)
+}
+
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	background: color-mix(in oklab, var(--bg) 85%, transparent 15%);
+	pointer-events: none
+}
+
+.container {
+	position: relative;
+	max-width: 1100px;
+	margin: 32px auto;
+	padding: 0 16px
+}
+
+header {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px
+}
+
+.title {
+	font-weight: 700;
+	font-size: 22px;
+	letter-spacing: .2px
+}
+
+.right {
+	display: flex;
+	gap: 8px;
+	align-items: center
+}
+
+.pill {
+	font-size: 12px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: color-mix(in oklab, var(--card) 92%, black 8%);
+	color: var(--muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	border: 1px solid var(--border)
+}
+
+.pill.ok {
+	color: var(--ok)
+}
+
+.pill.err {
+	color: var(--danger)
+}
+
+.card {
+	background: color-mix(in oklab, var(--card) 96%, black 4%);
+	backdrop-filter: saturate(110%) blur(2px);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: 0 1px 0 #0002
+}
+
+.card h2 {
+	font-size: 16px;
+	margin: 0 0 8px 0
+}
+
+.card .content {
+	padding: 16px
+}
+
+.row {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap
+}
+
+.row>.col {
+	flex: 1 1 260px
+}
+
+/* Buttons */
+button, .btn {
+	background: color-mix(in oklab, var(--card) 90%, black 10%);
+	color: var(--txt);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	padding: 10px 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-color .2s, background .2s, color .2s;
+}
+
+button:hover, .btn:hover, label.btn:hover {
+	border-color: color-mix(in oklab, var(--border) 60%, var(--acc) 40%)
+}
+
+.btn-acc {
+	background: color-mix(in oklab, var(--acc) 12%, var(--card) 88%)
+}
+
+/* Patch button */
+.btn-primary {
+	background: var(--acc);
+	color: #00111a;
+	border-color: color-mix(in oklab, var(--acc) 60%, #000 40%)
+}
+
+.btn-danger {
+	background: color-mix(in oklab, var(--danger) 10%, var(--card) 90%);
+	color: inherit
+}
+
+/* File inputs hidden */
+input[type="file"] {
+	display: none
+}
+
+/* Dropzone */
+.dropzone {
+	border: 2px dashed var(--border);
+	border-radius: 12px;
+	padding: 18px;
+	text-align: center;
+	color: var(--muted);
+	transition: .15s
+}
+
+/* Make the dropzone action button visually consistent across themes */
+.dropzone label.btn {
+	color: var(--txt);
+	/* evita texto blanco en tema claro */
+}
+
+/* Drag over highlight */
+.dropzone.dragover {
+	outline: 2px solid color-mix(in oklab, var(--acc) 60%, transparent 40%)
+}
+
+/* Table */
+table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0 8px
+}
+
+thead th {
+	font-size: 12px;
+	color: var(--muted);
+	font-weight: 700;
+	text-align: left;
+	padding: 0 8px
+}
+
+tbody tr {
+	background: color-mix(in oklab, var(--card) 96%, black 4%);
+	border: 1px solid var(--border)
+}
+
+tbody td {
+	padding: 10px 8px;
+	vertical-align: middle
+}
+
+tbody tr td:first-child {
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px
+}
+
+tbody tr td:last-child {
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px
+}
+
+.handle {
+	cursor: grab;
+	user-select: none
+}
+
+.filecell {
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 12.5px;
+	color: color-mix(in oklab, var(--txt) 88%, var(--muted) 12%)
+}
+
+/* Name input */
+.name-input {
+	width: 100%;
+	background: color-mix(in oklab, var(--card) 92%, black 8%);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	color: var(--txt);
+	padding: 8px;
+	font-size: 14px
+}
+
+.name-input.invalid {
+	border-color: var(--danger);
+	outline-color: var(--danger)
+}
+
+.name-hint {
+	font-size: 11px;
+	color: var(--danger);
+	margin-top: 4px;
+	display: none
+}
+
+.name-hint.show {
+	display: block
+}
+
+/* Selects */
+select {
+	background: color-mix(in oklab, var(--card) 92%, black 8%);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	color: var(--txt);
+	padding: 8px
+}
+
+/* Actions row in firmware card */
+.actions {
+	display: flex;
+	gap: 8px
+}
+
+/* Footer of table card */
+.footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 12px
+}
+
+.hint {
+	color: var(--muted);
+	font-size: 12px
+}
+
+.spacer {
+	flex: 1
+}
+
+/* Covers */
+.cover {
+	width: 138px;
+	height: 72px;
+	object-fit: cover;
+	border-radius: 8px;
+	box-shadow: 0 0 6px rgba(0, 0, 0, .5)
+}
+
+.covercell {
+	display: flex;
+	align-items: center;
+	gap: 10px
+}
+
+/* Header toolbar */
+.toolbar {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap
+}
+
+.toolbar label {
+	font-size: 12px;
+	color: var(--muted)
+}
+
+.caps-on .name-input {
+    text-transform: uppercase;
+}
+
+.site-footer {
+    text-align: center;
+}
+
+/* Optional extra utilities kept from previous versions */
+.fw-status {
+	margin-left: 1rem;
+	display: inline-flex;
+	align-items: center;
+	gap: .5rem
+}
+
+.btn-small {
+	padding: 2px 8px;
+	font-size: .85em
+}

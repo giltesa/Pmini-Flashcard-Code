@@ -1,150 +1,106 @@
-<html>
-<head>
-<title>UF2 ROM Patcher for PM2040</title>
-<h1>UF2 ROM Patcher for PM2040</h1>
-</head>
-<body>
-  
-  <label for="file">UF2 File: </label>
-  <input type="file" id="file" />
-  <label for="romfile">ROM File: </label>
-  <input type="file" id="romfile" />
-  <button id="read-file">Patch</button>
-  
-  <p><i>Yes, web design is my passion. Please refrain from contacting me to do work as a front-end web designer, my schedule is filled up 🫠.</i></p>
+<!doctype html>
+<html lang="en" data-theme="dark">
 
-  <script>
-  function lendian32( arr, base ) {    
-    return ( arr[ base ] + ( arr[ base + 1 ] * 256 ) + ( arr[ base + 2 ] * 65536 ) + ( arr[ base + 3 ] * 16777216 ) );
-  }
-  
-  function saveByteArray( filename, data) {
-    var blob = new Blob([data], {type: "application/octet-stream"});
-    var link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    var fileName = filename;
-    link.download = filename;
-    link.click();
-  };
-    
-  document.querySelector("#read-file").addEventListener('click', function() {
-    // no file selected to read
-    if(document.querySelector("#file").value == '') {
-      console.log('No UF2 file selected');
-      return;
-    }
-    
-    if(document.querySelector("#romfile").value == '') {
-      console.log('No ROM file selected');
-      return;
-    }
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>PM2040 – UF2 Multi-ROM Patcher</title>
+        <link rel="stylesheet" href="css/style.css" media="all" />
+    </head>
 
-    // UF2 file.
-    var uf2file = document.querySelector("#file").files[0];
-    var uf2reader = new FileReader();
-    
-    // ROM file.
-    var romfile = document.querySelector("#romfile").files[0];
-    var romreader = new FileReader();
-    
-    var romarray = 0;
-    
-    
-    romreader.onload = function(e) {
-      console.log( "ROM read. Now waiting for UF2" );
-      var rombytearray = e.target.result;
-      romarray = new Uint8Array( rombytearray )
-      
-      uf2reader.readAsArrayBuffer(uf2file);
-    }
-    
-    
-    uf2reader.onload = function(e) {
-      console.log( "UF2 read." );
-      var bytearray = e.target.result;
-      var uf2array = new Uint8Array( bytearray )
-      
-      // Search for the ROMSTART
-      const uf2chunk = 512;
-      const dataoffset = 32;
-      const addroffset = 12;
-      const datasizeoffset = 16;
-      
-      var foundStart = 0;
-      var ROMaddr = 0;
-      
-      for ( let i = 0; i < uf2array.length; i += uf2chunk ) {
-        // Get data size
-        var datSize = lendian32( uf2array, i + datasizeoffset );
-        
-        // Go over the data.
-        for ( let datInd = dataoffset; datInd < dataoffset + datSize; datInd++ ) {
-          if ( String.fromCharCode( uf2array[ i + datInd ] ) == 'R' &&
-            String.fromCharCode( uf2array[ i + datInd + 1 ] ) == 'O' &&
-            String.fromCharCode( uf2array[ i + datInd + 2 ] ) == 'M' &&
-            String.fromCharCode( uf2array[ i + datInd + 3 ] ) == 'S' &&
-            String.fromCharCode( uf2array[ i + datInd + 4 ] ) == 'T' &&
-            String.fromCharCode( uf2array[ i + datInd + 5 ] ) == 'A' &&
-            String.fromCharCode( uf2array[ i + datInd + 6 ] ) == 'R' &&
-            String.fromCharCode( uf2array[ i + datInd + 7 ] ) == 'T' ) {
-              
-            // Get ROM base addr.
-            var chunkBase = lendian32( uf2array, i + addroffset );
-            ROMaddr = chunkBase + datInd - dataoffset;
-        
-            console.log( "FOUND ROMSTART" );
-            console.log( ROMaddr );
-            foundStart = 1;
-            break;
-          }
-        }
+    <body>
+        <div class="container">
 
-        
-      }
-      
-      if ( !foundStart ) {
-        console.log( "did not find" );
-        return;
-      }
-      
-      // Start patching. Go over each chunk.
-      romLen = romarray.length;
-      for ( let i = 0; i < uf2array.length; i += uf2chunk ) {
-        // Get data size
-        var datSize = lendian32( uf2array, i + datasizeoffset );
-        var baseAddr = lendian32( uf2array, i + addroffset );
-        
-        // Contains ROM data?
-        if ( ( ROMaddr >= baseAddr && ROMaddr < baseAddr + datSize ) || // ROM start inside chunk.
-             ( ROMaddr + romLen > baseAddr && ROMaddr + romLen < baseAddr + datSize ) || // ROM end inside chunk.
-             ( ROMaddr < baseAddr && ROMaddr + romLen > baseAddr + datSize ) ) { // ROM spans over chunk.
-        
-          // This chunk contains ROM data.
-          // Go over data of chunk.
-          for ( let datInd = dataoffset; datInd < dataoffset + datSize; datInd++ ) {
-            // Calc addr.
-            var curAddr = datInd - dataoffset + baseAddr;
-            // Patching byte?
-            if ( curAddr >= ROMaddr && curAddr < ROMaddr + romLen ) {
-              var romByteAddr = curAddr - ROMaddr;
-              // Patch it.
-              uf2array[ i + datInd ] = romarray[ romByteAddr ];
-            }
-          }
-          
-        }
-        
-      }
-      
-      // Save the patched file.
-      saveByteArray( "PM2040_PATCHED.uf2", bytearray );
-      
-    };
-    
-    // Read romfile.
-    romreader.readAsArrayBuffer(romfile);
-  });
-  </script>
+        <header>
+            <div class="title">PM2040 – UF2 Multi-ROM Patcher</div>
+            <div class="right">
+                <div class="toolbar">
+                    <!-- Theme -->
+                    <label for="themeSel">Theme</label>
+                    <select id="themeSel" aria-label="Theme selector">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                    <!-- Name source -->
+                    <label for="globalNameSrc">Name source</label>
+                    <select id="globalNameSrc" aria-label="Global name source">
+                        <option value="filename" selected>From filename</option>
+                        <option value="binary">From binary</option>
+                    </select>
+                    <!-- Uppercase toggle -->
+                    <label for="capsToggle">Uppercase</label>
+                    <input id="capsToggle" type="checkbox" aria-label="Show & patch names in uppercase" />
+                </div>
+            </div>
+        </header>
 
-</body>
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                   <!-- Games -->
+                    <div class="col">
+                        <h2>Games</h2>
+                        <!-- Dropzone -->
+                        <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop .min games here (max 512 KiB each)">
+                            Drag & drop .min here or <label class="btn btn-danger" for="fileInput">Choose files</label>
+                            <input id="fileInput" type="file" accept=".min" multiple />
+                        </div>
+                        <div class="hint">Max games: 20. Max file size: 512 KiB. Duplicates (same file or game code) are ignored.</div>
+                    </div>
+                    <!-- Firmware -->
+                    <div class="col">
+                        <h2>Base firmware (UF2) <span id="fwStatus" class="pill">Base firmware: checking…</span></h2>
+                        <div class="actions">
+                            <button id="btnReloadFw" class="btn btn-danger">Reload firmware</button>
+                            <label class="btn btn-danger" for="fwInput">Choose another…</label>
+                            <input id="fwInput" type="file" accept=".uf2" />
+                        </div>
+                        <div class="hint" id="fwInfo">Will try to auto-load from the same folder: <code>PM2040.uf2</code>.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+            <div class="content">
+                <h2>Game list</h2>
+                <div class="hint" style="margin-bottom:8px">Reorder by dragging the handle (≡). Names may exceed 14 chars (will be truncated on patch). Invalid state shows red + hint. Use the global selector to switch all name sources.</div>
+                <div style="overflow:auto">
+                    <table aria-label="Games table" id="gamesTable">
+                        <thead>
+                            <tr>
+                                <th style="width:36px">#</th>
+                                <th style="width:28px"></th>
+                                <th style="width:150px">Cover</th>
+                                <th>File</th>
+                                <th style="width:300px">Display name</th>
+                                <th style="width:160px">Name source</th>
+                                <th style="width:70px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+                <!-- Footer buttons -->
+                <div class="footer">
+                    <div class="hint">Charset enforced; length &gt; 14 allowed visually but truncated when patching.</div>
+                    <div class="spacer"></div>
+                    <button id="btnClear" class="btn btn-danger">Clear</button>
+                    <button id="btnRun" class="btn btn-primary">Patch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container">
+            <small>Created: 2025-08 · Generated by GPT-5.</small>
+        </div>
+    </footer>
+
+    <script src="js/fflate.js"></script>
+    <script src="js/patcher.js"></script>
+    <script src="js/main.js"></script>
+
+   </body>
 </html>
