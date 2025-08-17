@@ -1,7 +1,6 @@
 #include "pm.h"
 #include "print.h"
 #include "draw.h"
-//#include "eeprom.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -325,10 +324,7 @@ int main(void)
   // Build visible index and pages based on non-empty titles
   rebuildMenuIndex();
 
-  // Read last status of the menu:
-  //readStatusMenu(&curPage, &n); // <<<<<<<<<<<<<<<<<<<<<<< Lectura de los datos, no me importa si no se leen, pues en su definicion se definen ambos a 0 (no me importa siempre y cuando la funcion no modifique los valores salvo si se pueden leer...)
-
-  // Key interrupts priority
+    // Key interrupts priority
   PRI_KEY(0x03);
 
   // Enable interrupts for keys (only power)
@@ -350,8 +346,6 @@ int main(void)
     if ( !( keys & KEY_A ) ) {
       // Run the chosen game.
       if (gValidCount > 0) {
-        //saveStatusMenu(curPage, n); //<<<<<<<<<<<<<<<<<<<<<<< guarda el estado del menu
-
         slotChose = gValidIdx[ n + (curPage * SLOTSPERPAGE) ];
         copyToRamEx(romStart);
       }
