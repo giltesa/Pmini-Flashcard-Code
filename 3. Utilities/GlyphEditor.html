@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>6x8 Glyph Editor (hex ⇄ grid)</title>
+<style>
+  :root { --cell: 28px; --gap: 4px; }
+  body { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#f7f7f7; margin:24px; color:#111; }
+  h1 { font-size:18px; margin:0 0 12px; }
+  .wrap { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
+  .grid {
+    display:grid;
+    grid-template-columns: repeat(6, var(--cell));
+    grid-template-rows: repeat(8, var(--cell));
+    gap: var(--gap);
+    user-select:none;
+    touch-action: none;
+    background:#ddd; padding: var(--gap); border-radius:10px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  }
+  .cell {
+    width: var(--cell); height: var(--cell);
+    background: white; border:1px solid #bbb; border-radius:6px; box-sizing:border-box;
+  }
+  .cell.on { background: #111; border-color:#111; }
+  .panel { min-width: 320px; flex:1; }
+  label { display:block; font-size:13px; color:#444; margin:10px 0 6px; }
+  textarea, input[type="text"] {
+    width:100%; box-sizing:border-box; font: inherit; padding:10px 12px; border:1px solid #ccc; border-radius:8px; background:white;
+  }
+  textarea { height:84px; resize:vertical; }
+  .bytes { font-size:14px; background:#fff; padding:10px 12px; border:1px solid #ccc; border-radius:8px; white-space:pre; }
+  .rowcol { font-size:12px; color:#666; margin-top:6px; }
+  .buttons { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  button { padding:8px 12px; border:1px solid #999; background:#fff; border-radius:8px; cursor:pointer; }
+  button:hover { background:#f1f1f1; }
+  .note { font-size:12px; color:#555; line-height:1.35; margin-top:8px; }
+</style>
+</head>
+<body>
+  <h1>6×8 Glyph Editor — columns → hex (LSB = top)</h1>
+  <div class="wrap">
+    <div id="grid" class="grid" aria-label="6x8 pixel grid"></div>
+
+    <div class="panel">
+      <label>Hex (6 bytes, column-major, bit0 = top):</label>
+      <input id="hexline" type="text" value="0x00, 0x00, 0x00, 0x00, 0x00, 0x00," />
+      <div class="buttons">
+        <button id="clear">Clear</button>
+        <button id="invert">Invert</button>
+        <button id="shiftUp">Shift ↑</button>
+        <button id="shiftDown">Shift ↓</button>
+        <button id="shiftLeft">Shift ←</button>
+        <button id="shiftRight">Shift →</button>
+      </div>
+      <div class="note">
+        Output matches your font format: 6 bytes (one per column).<br/>
+        Edit the hex field and press <b>Enter</b> or change focus to apply.
+      </div>
+
+      <label style="margin-top:14px;">Pretty (same content, reflowed):</label>
+      <div id="bytes" class="bytes">0x00, 0x00, 0x00, 0x00, 0x00, 0x00,</div>
+
+      <div id="coords" class="rowcol"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const COLS = 6, ROWS = 8;
+  // Now: bit0 = TOP row (LSB at top)  ✅
+  let cols = new Uint8Array(COLS);
+
+  const grid = document.getElementById('grid');
+  const bytesOut = document.getElementById('bytes');
+  const hexLine = document.getElementById('hexline');
+  const coords = document.getElementById('coords');
+
+  const cells = [];
+  for (let r=0; r<ROWS; r++) {
+    for (let c=0; c<COLS; c++) {
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.dataset.c = c;
+      div.dataset.r = r;
+      grid.appendChild(div);
+      cells.push(div);
+    }
+  }
+  function cellAt(r,c){ return cells[r*COLS + c]; }
+
+  function renderGrid() {
+    for (let r=0; r<ROWS; r++) {
+      for (let c=0; c<COLS; c++) {
+        const bit = r; // LSB=top
+        const on = (cols[c] >> bit) & 1;
+        cellAt(r,c).classList.toggle('on', !!on);
+      }
+    }
+    updateHexOutputs();
+  }
+
+  function updateHexOutputs() {
+    const hex = [...cols].map(b => '0x' + b.toString(16).toUpperCase().padStart(2,'0')).join(', ') + ',';
+    bytesOut.textContent = hex;
+    hexLine.value = hex;
+  }
+
+  // drawing
+  let painting = null; // true=set, false=clear
+  function setCell(r,c,val){
+    const bit = r; // LSB=top
+    if (val) cols[c] |= (1 << bit);
+    else     cols[c] &= ~(1 << bit);
+  }
+  function onPointer(e, fn){
+    const t = e.target.closest('.cell');
+    if (!t) return;
+    const c = +t.dataset.c, r = +t.dataset.r;
+    fn(r,c,t);
+    coords.textContent = `col: ${c}, row: ${r}`;
+  }
+  grid.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    onPointer(e,(r,c,t)=>{
+      const isOn = t.classList.contains('on');
+      painting = !isOn;
+      setCell(r,c, painting);
+      renderGrid();
+    });
+  });
+  grid.addEventListener('pointermove', e=>{
+    if (painting === null) return;
+    onPointer(e,(r,c)=>{
+      setCell(r,c, painting);
+      renderGrid();
+    });
+  });
+  window.addEventListener('pointerup', ()=> painting = null);
+
+  // hex -> grid
+  function applyHex(str){
+    const toks = (str||'').match(/0x[0-9a-fA-F]{2}|[0-9a-fA-F]{2}/g) || [];
+    if (toks.length < COLS) return;
+    const tmp = new Uint8Array(COLS);
+    for (let i=0;i<COLS;i++) tmp[i] = parseInt(toks[i],16);
+    cols.set(tmp);
+    renderGrid();
+  }
+  hexLine.addEventListener('change', ()=> applyHex(hexLine.value));
+  hexLine.addEventListener('keydown', e=>{ if (e.key === 'Enter') applyHex(hexLine.value); });
+
+  // buttons
+  document.getElementById('clear').onclick = ()=>{ cols.fill(0); renderGrid(); };
+  document.getElementById('invert').onclick = ()=>{ for (let i=0;i<COLS;i++) cols[i] ^= 0xFF; renderGrid(); };
+
+  // With LSB=top: Up = shift bits toward smaller row index => >> 1
+  document.getElementById('shiftUp').onclick = ()=>{ for (let i=0;i<COLS;i++) cols[i] = (cols[i] >> 1) & 0x7F; renderGrid(); };
+  // Down = shift toward larger row index => << 1
+  document.getElementById('shiftDown').onclick = ()=>{ for (let i=0;i<COLS;i++) cols[i] = (cols[i] << 1) & 0xFE; renderGrid(); };
+
+  document.getElementById('shiftLeft').onclick = ()=>{
+    for (let c=0;c<COLS-1;c++) cols[c] = cols[c+1];
+    cols[COLS-1] = 0; renderGrid();
+  };
+  document.getElementById('shiftRight').onclick = ()=>{
+    for (let c=COLS-1;c>0;c--) cols[c] = cols[c-1];
+    cols[0] = 0; renderGrid();
+  };
+
+  renderGrid();
+})();
+</script>
+</body>
+</html>
