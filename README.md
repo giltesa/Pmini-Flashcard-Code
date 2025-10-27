@@ -11,7 +11,7 @@ This repository is dedicated exclusively to the code. It is a fork and a customi
   [https://github.com/zwenergy/PM2040_MultiMenu/tree/main](https://github.com/zwenergy/PM2040_MultiMenu/tree/main)
 
 
-![Pmini](https://shop.giltesa.com/wp-content/uploads/2025/06/Pokemon-Mini-Flashcard-v1.1_1.png)
+![Pokemon-Mini-Flashcard-v1.1](https://shop.giltesa.com/wp-content/uploads/2025/06/Pokemon-Mini-Flashcard-v1.1_1.jpg)
 
 
 ## Documentation
