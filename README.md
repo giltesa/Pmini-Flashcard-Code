@@ -14,6 +14,13 @@ This repository is dedicated exclusively to the code. It is a fork and a customi
 ![Pmini](https://shop.giltesa.com/wp-content/uploads/2025/06/Pokemon-Mini-Flashcard-v1.1_1.png)
 
 
+## Documentation
+
+Detailed instructions on how to compile the firmware and the menu can be found in the user guide:
+
+[Usage Guide PDF](https://github.com/giltesa/Pmini-Flashcard/raw/master/3.%20Documentation/Usage%20Guide.pdf)
+
+
 ## Attributions
 
 *   This project was designed entirely from scratch, but it was inspired by the [PM2040 project by zwenergy](https://github.com/zwenergy/PM2040), who created an adapter for soldering a [Waveshare RP2040 Zero](https://www.waveshare.com/rp2040-zero.htm), along with software tools for flashing the microcontroller. It intentionally uses the same pinout to ensure compatibility with his software. Many thanks to [zwenergy](https://github.com/zwenergy) for his excellent work! His code was used as a base and adapted for this cartridge.
