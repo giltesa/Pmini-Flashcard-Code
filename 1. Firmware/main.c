@@ -1,4 +1,4 @@
-#define MULTICART
+//#define MULTICART
 
 #include "pico/stdlib.h"
 
