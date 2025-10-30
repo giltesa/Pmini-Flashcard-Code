@@ -3,10 +3,10 @@ name: Deploy ROM Patcher to GitHub Pages
 on:
   push:
     branches:
-      - main  # se ejecuta al hacer push en la rama principal
+      - main
     paths:
-      - '4. ROM Patcher/**'  # solo si cambias algo dentro de esa carpeta
-  workflow_dispatch:  # permite lanzarlo manualmente
+      - '4. ROM Patcher/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -34,7 +34,7 @@ jobs:
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '4. ROM Patcher'  # <-- carpeta a publicar
+          path: '4. ROM Patcher'
 
       - name: Deploy to GitHub Pages
         id: deployment
