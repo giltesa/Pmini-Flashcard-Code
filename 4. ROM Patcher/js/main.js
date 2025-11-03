@@ -107,7 +107,6 @@ function setFwStatus(text, cls) {
 }
 
 // ===== Firmware status =====
-// ===== Firmware status =====
 async function tryLoadDefaultFirmware() {
     if (location.protocol === 'file:') {
         // Browsers block fetch() of local files when the page is opened with file://
@@ -446,6 +445,48 @@ function initNameSource() {
 	applyNameSource(val);
 }
 
+// ===== Patch the games to remove sleep mode (Thank you to zoranc) =====
+function patchGameResumeBehavior(entry) {
+  const PATCH_DATA = {
+  //"MACD": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards DE
+  //"MACE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards US
+  //"MACF": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards FR
+  //"MACJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards JP
+    "MBRE": { offset: 0x419A, from: 0x42, to: 0x48 }, // Pichu      US
+    "MBRJ": { offset: 0x419A, from: 0x42, to: 0x48 }, // Pichu      JP
+  //"MLTE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Snorlax    EU
+  //"MLTJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Snorlax    JP
+  //"MPBE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Pinball    US
+  //"MPBJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Pinball    JP
+  //"MPTE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini US
+  //"MPTJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini JP
+  //"MPTP": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini EU
+  //"MPZD": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     DE
+  //"MPZE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     US
+  //"MPZF": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     FR
+  //"MPZJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     JP
+    "MRCE": { offset: 0x2673, from: 0x42, to: 0x48 }, // Race       US
+    "MRCJ": { offset: 0x2673, from: 0x42, to: 0x48 }, // Race       JP
+    "MSDE": { offset: 0x2A88, from: 0x42, to: 0x48 }, // Breeder    US
+    "MSDJ": { offset: 0x2A88, from: 0x42, to: 0x48 }, // Breeder    JP
+    "MSTJ": { offset: 0x4AE3, from: 0x42, to: 0x48 }, // Tetris     JP
+    "MSTP": { offset: 0x4B18, from: 0x42, to: 0x48 }, // Tetris     EU
+    "MTAE": { offset: 0x2A40, from: 0x42, to: 0x48 }, // Togepi     US
+    "MTAJ": { offset: 0x2A40, from: 0x42, to: 0x48 }, // Togepi     JP
+  //"MZ2J": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle 2   JP
+  };
+  const patch = PATCH_DATA[entry.gameCode];
+  if (!patch) return entry.bytes; // no patch for this game
+  const view = new Uint8Array(entry.bytes);
+  if (view[patch.offset] === patch.from) {
+    view[patch.offset] = patch.to;
+    console.log(`[resume-patched] ${entry.gameCode} @ ${patch.offset.toString(16)}`);
+  } else {
+    console.warn(`[resume-skip] ${entry.gameCode} unexpected byte at ${patch.offset.toString(16)}`);
+  }
+  return entry.bytes;
+}
+
 // ===== Patch orchestration =====
 async function runPatch() {
 	if (!baseFirmware) {
@@ -473,7 +514,7 @@ async function runPatch() {
 		return;
 	}
 
-	const ROMArray = entries.map(e => e.bytes);
+	const ROMArray = entries.map(e => patchGameResumeBehavior(e));
 
 	// Apply uppercase if toggle is on (patch-time), then enforce 14 chars
 	const caps = isCapsOn();
