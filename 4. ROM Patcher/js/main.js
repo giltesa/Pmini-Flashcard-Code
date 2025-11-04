@@ -445,26 +445,26 @@ function initNameSource() {
 	applyNameSource(val);
 }
 
-// ===== Patch the games to remove sleep mode (Thank you to zoranc) =====
+// ===== Patch the games to remove sleep mode (Thank you to zoranc & zwenergy) =====
 function patchGameResumeBehavior(entry) {
   const PATCH_DATA = {
-  //"MACD": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards DE
-  //"MACE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards US
-  //"MACF": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards FR
-  //"MACJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Zany Cards JP
+    "MACD": { offset: 0x4CB7, from: 0x42, to: 0x48 }, // Zany Cards DE
+    "MACE": { offset: 0x4CB7, from: 0x42, to: 0x48 }, // Zany Cards US
+    "MACF": { offset: 0x4CB7, from: 0x42, to: 0x48 }, // Zany Cards FR
+    "MACJ": { offset: 0x4CB7, from: 0x42, to: 0x48 }, // Zany Cards JP
     "MBRE": { offset: 0x419A, from: 0x42, to: 0x48 }, // Pichu      US
     "MBRJ": { offset: 0x419A, from: 0x42, to: 0x48 }, // Pichu      JP
-  //"MLTE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Snorlax    EU
-  //"MLTJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Snorlax    JP
-  //"MPBE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Pinball    US
-  //"MPBJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Pinball    JP
-  //"MPTE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini US
-  //"MPTJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini JP
-  //"MPTP": { offset: 0x0000, from: 0x00, to: 0x00 }, // Party Mini EU
-  //"MPZD": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     DE
-  //"MPZE": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     US
-  //"MPZF": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     FR
-  //"MPZJ": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle     JP
+    "MLTE": { offset: 0x4B18, from: 0x42, to: 0x48 }, // Snorlax    US EU
+    "MLTJ": { offset: 0x4B18, from: 0x42, to: 0x48 }, // Snorlax    JP
+  //"MPBE": { offset: 0x0000, from: 0x42, to: 0x48 }, // Pinball    US EU   //Not needed
+  //"MPBJ": { offset: 0x0000, from: 0x42, to: 0x48 }, // Pinball    JP      //Not needed
+  //"MPTE": { offset: 0x0000, from: 0x42, to: 0x48 }, // Party Mini US      //Only fails with alarm
+  //"MPTJ": { offset: 0x0000, from: 0x42, to: 0x48 }, // Party Mini JP      //Only fails with alarm
+  //"MPTP": { offset: 0x0000, from: 0x42, to: 0x48 }, // Party Mini EU      //Only fails with alarm
+  //"MPZD": { offset: 0x0000, from: 0x42, to: 0x48 }, // Puzzle     DE      //Not needed
+  //"MPZE": { offset: 0x0000, from: 0x42, to: 0x48 }, // Puzzle     US EU   //Not needed
+  //"MPZF": { offset: 0x0000, from: 0x42, to: 0x48 }, // Puzzle     FR      //Not needed
+  //"MPZJ": { offset: 0x0000, from: 0x42, to: 0x48 }, // Puzzle     JP      //Not needed
     "MRCE": { offset: 0x2673, from: 0x42, to: 0x48 }, // Race       US
     "MRCJ": { offset: 0x2673, from: 0x42, to: 0x48 }, // Race       JP
     "MSDE": { offset: 0x2A88, from: 0x42, to: 0x48 }, // Breeder    US
@@ -473,7 +473,7 @@ function patchGameResumeBehavior(entry) {
     "MSTP": { offset: 0x4B18, from: 0x42, to: 0x48 }, // Tetris     EU
     "MTAE": { offset: 0x2A40, from: 0x42, to: 0x48 }, // Togepi     US
     "MTAJ": { offset: 0x2A40, from: 0x42, to: 0x48 }, // Togepi     JP
-  //"MZ2J": { offset: 0x0000, from: 0x00, to: 0x00 }, // Puzzle 2   JP
+  //"MZ2J": { offset: 0x0000, from: 0x42, to: 0x48 }, // Puzzle 2   JP      //Not needed
   };
   const patch = PATCH_DATA[entry.gameCode];
   if (!patch) return entry.bytes; // no patch for this game
