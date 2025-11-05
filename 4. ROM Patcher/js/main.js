@@ -240,7 +240,7 @@ function buildCoverImg(id) {
 	const img = new Image();
 	img.className = 'cover';
 	img.alt = 'Cover ' + id;
-	img.src = `img/${id}.png`;
+    img.src = COVER_MAP[id] ?? `img/${id}.png`;
 	img.onerror = () => {
 		console.warn('[cover-missing]', id);
 		img.onerror = null;
