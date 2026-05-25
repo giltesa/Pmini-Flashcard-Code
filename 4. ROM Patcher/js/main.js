@@ -289,10 +289,12 @@ async function addFiles(files) {
 		const gameCode = parseGameCodeFromHeader(bytes);
 		if (gameCode) console.log('[game-code]', gameCode);
 
-		if (gameCode && entries.some(e => e.gameCode === gameCode)) {
+		/*
+        // There are quite a few homebrew applications using the same ID, which makes it impossible to control duplicates.
+        if (gameCode && entries.some(e => e.gameCode === gameCode)) {
 			console.warn('[skip-duplicate-game-code]', gameCode, filename);
 			continue;
-		}
+		}*/
 
 		const gameId = sanitizeForPath(gameCode || defaultNameFromFilename(filename).toLowerCase());
 		const binaryName = parseTitleFromHeader(bytes);
@@ -446,6 +448,7 @@ function initNameSource() {
 }
 
 // ===== Patch the games to remove sleep mode (Thank you to zoranc & zwenergy) =====
+//       https://logicplace.com/pm-dev-docs/hardware/cpu/bios/#software-interrupts
 function patchGameResumeBehavior(entry) {
   const PATCH_DATA = {
     "MACD": { offset: 0x4CB7, from: 0x42, to: 0x48 }, // Zany Cards DE
