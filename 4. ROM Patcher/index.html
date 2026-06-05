@@ -9,99 +9,157 @@
     </head>
 
     <body>
+
         <div class="container">
 
-        <header>
-            <div class="title">PM2040 – UF2 Multi-ROM Patcher</div>
-            <div class="right">
-                <div class="toolbar">
-                    <!-- Theme -->
-                    <label for="themeSel">Theme</label>
-                    <select id="themeSel" aria-label="Theme selector">
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                    </select>
-                    <!-- Name source -->
-                    <label for="globalNameSrc">Name source</label>
-                    <select id="globalNameSrc" aria-label="Global name source">
-                        <option value="filename" selected>From filename</option>
-                        <option value="binary">From binary</option>
-                    </select>
-                    <!-- Uppercase toggle -->
-                    <label for="capsToggle">Uppercase</label>
-                    <input id="capsToggle" type="checkbox" aria-label="Show & patch names in uppercase" />
-                </div>
-            </div>
-        </header>
+            <header>
+                <div class="title" data-i18n="appTitle">PM2040 – UF2 Multi-ROM Patcher</div>
 
-        <div class="card">
-            <div class="content">
-                <div class="row">
-                   <!-- Games -->
-                    <div class="col">
-                        <h2>Games</h2>
-                        <!-- Dropzone -->
-                        <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop .min games here (max 512 KiB each)">
-                            Drag & drop .min here or <label class="btn btn-danger" for="fileInput">Choose files</label>
-                            <input id="fileInput" type="file" accept=".min" multiple />
-                        </div>
-                        <div class="hint">Max games: 20. Max file size: 512 KiB. Duplicates (same file or game code) are ignored.</div>
-                    </div>
-                    <!-- Firmware -->
-                    <div class="col">
-                        <h2>Base firmware (UF2) <span id="fwStatus" class="pill">Base firmware: checking…</span></h2>
-                        <div class="actions">
-                            <button id="btnReloadFw" class="btn btn-danger">Reload firmware</button>
-                            <label class="btn btn-danger" for="fwInput">Choose another…</label>
-                            <input id="fwInput" type="file" accept=".uf2" />
-                        </div>
-                        <div class="hint" id="fwInfo">Will try to auto-load from the same folder: <code>PM2040.uf2</code>.</div>
+                <div class="right">
+                    <div class="toolbar">
+
+                        <!-- Language -->
+                        <label for="langSel" data-i18n="language">Language</label>
+                        <select id="langSel" aria-label="Language selector">
+                          <option value="en">English</option>
+                          <option value="de">Deutsch</option>
+                          <option value="es">Español</option>
+                          <option value="fr">Français</option>
+                          <option value="it">Italiano</option>
+                          <option value="ja">日本語</option>
+                          <option value="nl">Nederlands</option>
+                          <option value="pl">Polski</option>
+                          <option value="pt">Português</option>
+                          <option value="th">ไทย</option>
+                          <option value="zh">中文</option>
+                        </select>
+
+                        <!-- Theme -->
+                        <label for="themeSel" data-i18n="theme">Theme</label>
+                        <select id="themeSel" aria-label="Theme selector">
+                            <option value="dark" data-i18n="dark">Dark</option>
+                            <option value="light" data-i18n="light">Light</option>
+                        </select>
+
+                        <!-- Name source -->
+                        <label for="globalNameSrc" data-i18n="nameSource">Name source</label>
+                        <select id="globalNameSrc" aria-label="Global name source">
+                            <option value="filename" selected data-i18n="fromFilename">From filename</option>
+                            <option value="binary" data-i18n="fromBinary">From binary</option>
+                        </select>
+
+                        <!-- Uppercase toggle -->
+                        <label for="capsToggle" data-i18n="uppercase">Uppercase</label>
+                        <input id="capsToggle" type="checkbox" aria-label="Show & patch names in uppercase" />
+
                     </div>
                 </div>
-            </div>
-        </div>
+            </header>
 
-        <div class="card" style="margin-top:16px">
-            <div class="content">
-                <h2>Game list</h2>
-                <div class="hint" style="margin-bottom:8px">Reorder by dragging the handle (≡). Names may exceed 14 chars (will be truncated on patch). Invalid state shows red + hint. Use the global selector to switch all name sources.</div>
-                <div style="overflow:auto">
-                    <table aria-label="Games table" id="gamesTable">
-                        <thead>
-                            <tr>
-                                <th style="width:36px">#</th>
-                                <th style="width:28px"></th>
-                                <th style="width:150px">Cover</th>
-                                <th>File</th>
-                                <th style="width:300px">Display name</th>
-                                <th style="width:160px">Name source</th>
-                                <th style="width:70px">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody"></tbody>
-                    </table>
+            <div class="card">
+                <div class="content">
+
+                    <div class="row">
+
+                        <!-- Games -->
+                        <div class="col">
+                            <h2 data-i18n="games">Games</h2>
+
+                            <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop .min games here (max 512 KiB each)">
+                                <span data-i18n="dropzone">Drag & drop .min here or</span>
+                                <label class="btn btn-danger" for="fileInput" data-i18n="chooseFiles">Choose files</label>
+                                <input id="fileInput" type="file" accept=".min" multiple />
+                            </div>
+
+                            <div class="hint" data-i18n="gamesHint">Max games: 20. Max file size: 512 KiB. Duplicates (same file or game code) are ignored.</div>
+                        </div>
+
+                        <!-- Firmware -->
+                        <div class="col">
+
+                            <h2>
+                                <span data-i18n="firmware">Base firmware (UF2)</span>
+
+                                <span id="fwStatus" class="pill" data-i18n="fwChecking">Base firmware: checking…</span>
+                            </h2>
+
+                            <div class="actions">
+                                <button id="btnReloadFw" class="btn btn-danger" data-i18n="reloadFirmware">Reload firmware</button>
+                                <label class="btn btn-danger" for="fwInput" data-i18n="chooseAnother">Choose another…</label>
+                                <input id="fwInput" type="file" accept=".uf2" />
+                            </div>
+
+                            <div class="hint" id="fwInfo">Will try to auto-load from the same folder: <code>PM2040.uf2</code>.</div>
+
+                        </div>
+
+                    </div>
+
                 </div>
-                <!-- Footer buttons -->
-                <div class="footer">
-                    <div class="hint">Charset enforced; length &gt; 14 allowed visually but truncated when patching.</div>
-                    <div class="spacer"></div>
-                    <button id="btnClear" class="btn btn-danger">Clear</button>
-                    <button id="btnRun" class="btn btn-primary">Patch</button>
-                </div>
             </div>
+
+            <div class="card" style="margin-top:16px">
+
+                <div class="content">
+
+                    <h2 data-i18n="gameList">Game list</h2>
+
+                    <div class="hint" style="margin-bottom:8px" data-i18n="gameListHint">
+                        Reorder by dragging the handle (≡). Names may exceed 14 chars (will be truncated on patch). Invalid state shows red + hint. Use the global selector to switch all name sources.
+                    </div>
+
+                    <div style="overflow:auto">
+
+                        <table aria-label="Games table" id="gamesTable">
+
+                            <thead>
+                                <tr>
+                                    <th style="width:36px">#</th>
+                                    <th style="width:28px"></th>
+                                    <th style="width:150px" data-i18n="cover">Cover</th>
+                                    <th data-i18n="file">File</th>
+                                    <th style="width:300px" data-i18n="displayName">Display name</th>
+                                    <th style="width:160px" data-i18n="nameSource">Name source</th>
+                                    <th style="width:70px" data-i18n="actions">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tbody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="footer">
+
+                        <div class="hint" data-i18n="charsetHint">Charset enforced; length &gt; 14 allowed visually but truncated when patching.</div>
+
+                        <div class="spacer"></div>
+
+                        <button id="btnClear" class="btn btn-danger" data-i18n="clear">Clear</button>
+
+                        <button id="btnRun" class="btn btn-primary" data-i18n="patch">Patch</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-    </div>
 
-    <footer class="site-footer">
-        <div class="container">
-            <small>Created: 2025-12 · Generated by GPT-5.</small>
-        </div>
-    </footer>
+        <footer class="site-footer">
+            <div class="container">
+                <small data-i18n="footerText">Created: 2026-06 · Generated by GPT-5.</small>
+            </div>
+        </footer>
 
-    <script src="js/fflate.js"></script>
-    <script src="js/patcher.js"></script>
-    <script src="js/covers.js" defer></script>
-    <script src="js/main.js"></script>
+        <script src="js/fflate.js"></script>
+        <script src="js/lang.js"></script>
+        <script src="js/patcher.js"></script>
+        <script src="js/covers.js" defer></script>
+        <script src="js/main.js"></script>
 
-   </body>
+    </body>
+
 </html>

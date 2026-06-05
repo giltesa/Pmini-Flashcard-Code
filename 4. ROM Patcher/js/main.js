@@ -38,6 +38,7 @@ const NAME_MIN          = 1;
 const NAME_MAX          = 14;
 const MAX_GAMES         = 20;
 const MAX_GAME_BYTES    = 512 * 1024;
+const LANG_KEY          = 'PM2040_lang';
 const THEME_KEY         = 'PM2040_theme';
 const CAPS_KEY          = 'PM2040_caps';
 const NAME_SRC_KEY      = 'PM2040_nameSrc';
@@ -59,6 +60,70 @@ let idSeq        = 1;
 // ===== DOM helpers =====
 const  $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+// ===== Language handling =====
+function applyLanguage(lang) {
+    const dict = LANGUAGES[lang] || LANGUAGES.en;
+
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (dict[key]) {
+            el.textContent = dict[key];
+        }
+    });
+
+    try {
+        localStorage.setItem(LANG_KEY, lang);
+    } catch (_) {}
+}
+
+function rerenderDynamicUI(tr) {
+  const sel = tr.querySelector('.name-source');
+  if (!sel) return;
+
+  const optFilename = sel.querySelector('option[value="filename"]');
+  const optBinary = sel.querySelector('option[value="binary"]');
+
+  if (optFilename) optFilename.textContent = t('fromFilename');
+  if (optBinary) optBinary.textContent = t('fromBinary');
+
+  const btnDel = tr.querySelector('.btn-del');
+  if (btnDel) {
+    btnDel.setAttribute('aria-label', t('remove'));
+    btnDel.setAttribute('title', t('remove'));
+  }
+
+  const handle = tr.querySelector('.handle');
+  if (handle) {
+    handle.setAttribute('title', t('dragToReorder'));
+  }
+}
+
+function initLanguage() {
+    let lang = 'en';
+
+    try {
+        lang = localStorage.getItem(LANG_KEY) || 'en';
+    } catch (_) {}
+
+    $('#langSel').value = lang;
+    applyLanguage(lang);
+}
+
+function t(key, vars = {}) {
+    const lang = $('#langSel')?.value || 'en';
+    const dict = LANGUAGES[lang] || LANGUAGES.en;
+
+    let text = dict[key] || key;
+
+    Object.entries(vars).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, v);
+    });
+
+    return text;
+}
 
 // ===== Theme handling =====
 function applyTheme(t) {
@@ -110,12 +175,12 @@ function setFwStatus(text, cls) {
 async function tryLoadDefaultFirmware() {
     if (location.protocol === 'file:') {
         // Browsers block fetch() of local files when the page is opened with file://
-        setFwStatus('Base firmware: local page — pick file manually', 'err');
-        $('#fwInfo').textContent = 'Because this page is opened from your disk (file://), browsers block auto-loading. Click “Pick another…” or “Reload” to choose PM2040.uf2.';
+        setFwStatus(t('fwLocalPage'), 'err');
+        $('#fwInfo').textContent = t('fwFileProtocolWarning');
         return;
     }
 
-    setFwStatus('Base firmware: checking…');
+    setFwStatus(t('fwChecking'));
 
     try {
         // --- 1) Try ZIP first ---
@@ -130,13 +195,13 @@ async function tryLoadDefaultFirmware() {
 
             // Look for any file that ends with .uf2 inside the archive
             const uf2File = Object.keys(files).find(f => f.toLowerCase().endsWith('.uf2'));
-            if (!uf2File) throw new Error('ZIP found but no UF2 inside');
+            if (!uf2File) throw new Error(t('fwLoadedZipNoUF2'));
 
             // Store extracted UF2 as ArrayBuffer
             baseFirmware = files[uf2File].buffer;
 
-            setFwStatus('Base firmware: loaded (zip)', 'ok');
-            $('#fwInfo').textContent = `Loaded from "${zipPath}" → ${uf2File} (${formatSize(baseFirmware.byteLength)}).`;
+            setFwStatus(t('fwLoadedZip'), 'ok');
+            $('#fwInfo').textContent = t('fwLoadedFrom') + ` "${zipPath}" → ${uf2File} (${formatSize(baseFirmware.byteLength)}).`;
             return;
         }
 
@@ -146,12 +211,12 @@ async function tryLoadDefaultFirmware() {
 
         baseFirmware = await res.arrayBuffer();
 
-        setFwStatus('Base firmware: loaded (default UF2)', 'ok');
-        $('#fwInfo').textContent = 'Loaded "' + DEFAULT_FW_PATH + '" (' + formatSize(baseFirmware.byteLength) + ').';
+        setFwStatus(t('fwLoaded'), 'ok');
+        $('#fwInfo').textContent = t('fwLoadedDefault') + ` "${DEFAULT_FW_PATH}" (${formatSize(baseFirmware.byteLength)}).`;
     } catch (e) {
         // Both ZIP and UF2 failed
-        setFwStatus('Base firmware: not found', 'err');
-        $('#fwInfo').textContent = 'Pick a base firmware manually ("Pick another…").';
+        setFwStatus(t('fwNotFound'), 'err');
+        $('#fwInfo').textContent = t('fwPickManual');
         console.warn('Could not load default firmware:', e);
     }
 }
@@ -172,18 +237,18 @@ function defaultNameFromFilename(filename) {
 function validateName(n) {
 	if (n.length < NAME_MIN) return {
 		ok: false,
-		reason: 'Name must be at least 1 character.'
+		reason: t('nameTooShort')
 	};
 	for (let i = 0; i < n.length; i++) {
 		const ch = n[i];
 		if (!ALLOWED_CHARS.includes(ch)) return {
 			ok: false,
-			reason: `Character "${ch}" is not allowed.`
+			reason: t('charNotAllowed').replace('{ch}', ch)
 		};
 	}
 	if (n.length > NAME_MAX) return {
 		ok: false,
-		reason: `Name exceeds ${NAME_MAX} characters (will be truncated).`
+		reason: t('nameTooLong').replace('{max}', NAME_MAX)
 	};
 	return {
 		ok: true,
@@ -267,14 +332,14 @@ async function addFiles(files) {
 
 	const remaining = Math.max(0, MAX_GAMES - entries.length);
 	if (list.length > remaining) {
-		alert(`Only ${remaining} more game(s) allowed (MAX_GAMES=${MAX_GAMES}). Extra files will be ignored.`);
+		alert(t('maxGamesReached').replace('{max}', MAX_GAMES));
 		list = list.slice(0, remaining);
 	}
 
 	for (const file of list) {
 		if (file.size > MAX_GAME_BYTES) {
 			console.warn('[skip-large-game]', file.name, file.size);
-			alert(`"${file.name}" exceeds 512 KiB and was skipped.`);
+			alert(t('fileTooLarge').replace('{file}', file.name));
 			continue;
 		}
 		const bytes = await file.arrayBuffer();
@@ -407,6 +472,14 @@ function appendRow(entry) {
 		syncEntriesFromDOM();
 	});
 
+    /*const optFilename = tr.querySelector('option[value="filename"]');
+    const optBinary = tr.querySelector('option[value="binary"]');
+
+    if (optFilename) optFilename.textContent = t('fromFilename');
+    if (optBinary) optBinary.textContent = t('fromBinary');*/
+
+    rerenderDynamicUI(tr);
+
 	document.getElementById('tbody').appendChild(tr);
 }
 
@@ -495,14 +568,14 @@ function patchGameResumeBehavior(entry) {
 async function runPatch() {
 	if (!baseFirmware) {
 		if (location.protocol === 'file:') {
-			alert('Open from disk detected. Please choose a UF2 with “Pick another…” or click “Reload” to open the file picker.');
+			alert(t('fwFileModeAlert'));
 		} else {
-			alert('Load base firmware first (PM2040.uf2 or pick manually).');
+			alert(t('fwLoadRequired'));
 		}
 		return;
 	}
 	if (!entries.length) {
-		alert('Add at least one .min game.');
+		alert(t('noGamesAdded'));
 		return;
 	}
 
@@ -514,7 +587,7 @@ async function runPatch() {
 		if (!inp.value) anyEmpty = true;
 	}
 	if (anyEmpty) {
-		alert('Some names are empty.');
+		alert(t('emptyNames'));
 		return;
 	}
 
@@ -535,21 +608,26 @@ async function runPatch() {
 		if (typeof window.injectROMs === 'function') {
 			await window.injectROMs(baseFirmware.slice(0), ROMArray);
 		} else {
-			alert('injectROMs(...) not found. Please include patcher.js before this UI script.');
+			alert(t('injectRomMissing'));
 		}
 	} catch (err) {
 		console.error('Patch error:', err);
-		alert('Patch failed. See console for details.');
+		alert(t('patchFailed'));
 	}
 }
 
 // ===== Init =====
 (function init() {
+    initLanguage();
 	initTheme();
 	initCaps();
 	initNameSource();
 	tryLoadDefaultFirmware();
 
+    $('#langSel').addEventListener('change', (e) => {
+        applyLanguage(e.target.value);
+        location.reload();
+    });
 	$('#themeSel').addEventListener('change', (e) => applyTheme(e.target.value));
 	$('#capsToggle').addEventListener('change', (e) => applyCaps(e.target.checked));
 
@@ -580,14 +658,14 @@ async function runPatch() {
 		const f = e.target.files?.[0];
 		if (!f) return;
 		if (!f.name.toLowerCase().endsWith('.uf2')) {
-			alert('Only .uf2 is allowed.');
+			alert(t('uf2Only'));
 			e.target.value = '';
-			setFwStatus('Base firmware: not found', 'err');
+			setFwStatus(t('fwNotFound'), 'err');
 			return;
 		}
 		baseFirmware = await f.arrayBuffer();
-		setFwStatus('Base firmware: loaded (manual)', 'ok');
-		$('#fwInfo').textContent = 'Loaded "' + f.name + '" (' + formatSize(baseFirmware.byteLength) + ').';
+		setFwStatus(t('fwLoadedManual'), 'ok');
+		$('#fwInfo').textContent = t('fwLoadedFile') + ` "${f.name}" (${formatSize(baseFirmware.byteLength)}).`;
 	});
 
 	$('#btnReloadFw').addEventListener('click', () => {
