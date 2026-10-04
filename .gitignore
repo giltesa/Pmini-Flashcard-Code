@@ -6,6 +6,7 @@ GoogleSketchUp
 *.b#*
 *.skb
 *.min
+!eeprom_manager.min
 *.eep
 *.src
 obj/*
