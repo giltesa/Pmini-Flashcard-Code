@@ -24,11 +24,6 @@
 #define WHITE_ON_BLACK 2  // white text on black background
 #define BLACK_ON_WHITE 3  // black text on white background
 
-// Character-aligned versions (Y = byte-row index)
-void printChar( int x_px, int y_row, unsigned char c, int color );
-void printDigit( int x_px, int y_row, unsigned char c, int color );
-void print( int x_px, int y_row, const char* str, int color );
-
 // Pixel-aligned versions
 void printCharPx( int x_px, int y_px, unsigned char c, int color );
 void printDigitPx( int x_px, int y_px, unsigned char c, int color );

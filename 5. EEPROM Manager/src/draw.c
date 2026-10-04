@@ -167,36 +167,6 @@ void drawHorLine( int x1_px, int x2_px, int y_px, int color )
 
 
 /**
- * Draws a horizontal line from (x1_px, y_px) to (x2_px, y_px) inclusive without performing bounds checks.
- * This version assumes that:
- * - x1_px..x2_px are already clipped to [0..LCDWIDTH-1]
- * - 0 <= y_px < LCDHEIGHT
- * Designed for use in tight inner loops where maximum speed is required.
- *
- * @param x1_px Starting X position in pixels (already validated).
- * @param x2_px Ending X position in pixels (already validated).
- * @param y_px  Y position in pixels (already validated).
- * @param color Use BLACK to set pixels (bit = 1) or WHITE to clear pixels (bit = 0).
- */
-static void drawHorLine_NoClip( int x1_px, int x2_px, int y_px, int color )
-{
-    unsigned char *p = (unsigned char*)(FRAMEBUFF + x1_px + (y_px >> 3) * LCDWIDTH);
-    unsigned char m  = (unsigned char)(1u << (y_px & 7));
-
-    if ( color == BLACK ){
-        while (x1_px++ <= x2_px){
-            *p++ |= m;
-        }
-    } else {
-        unsigned char inv = (unsigned char)~m;
-        while (x1_px++ <= x2_px){
-            *p++ &= inv;
-        }
-    }
-}
-
-
-/**
  * Draws a vertical line from (x_px, y1_px) to (x_px, y2_px) inclusive.
  * Optimized to minimize bit masking by handling the first and last partial bytes separately
  * and filling any middle full bytes directly.
@@ -292,68 +262,6 @@ void drawVerLine( int x_px, int y1_px, int y2_px, int color )
 
 
 /**
- * Draws a vertical line from (x_px, y1_px) to (x_px, y2_px) inclusive without performing bounds checks.
- * Assumes x_px, y1_px, and y2_px are already clipped to valid display coordinates.
- * Optimized by handling the first and last partial bytes separately and filling any middle full bytes directly.
- *
- * @param x_px   X position in pixels (already validated).
- * @param y1_px  Starting Y position in pixels (already validated).
- * @param y2_px  Ending Y position in pixels (already validated).
- * @param color  Use BLACK to set pixels (bit = 1) or WHITE to clear pixels (bit = 0).
- */
-static void drawVerLine_NoClip( int x_px, int y1_px, int y2_px, int color )
-{
-    unsigned char *p;
-    int yb1 = y1_px >> 3;
-    int yb2 = y2_px >> 3;
-    unsigned char m1, m2;
-
-    // Pointer to first byte row for y1_px
-    p = (unsigned char*)(FRAMEBUFF + x_px + yb1 * LCDWIDTH);
-
-    if (yb1 == yb2){
-        // Both ends in the same byte: mask only bits [y1..y2]
-        m1 = (unsigned char)(0xFFu << (y1_px & 7));
-        m2 = (unsigned char)(0xFFu >> (7 - (y2_px & 7)));
-        m1 &= m2;
-        if (color == BLACK){
-            *p |= m1;
-        } else {
-            *p &= (unsigned char)~m1;
-        }
-        return;
-    }
-
-    // First (partial) byte: bits from y1..7
-    m1 = (unsigned char)(0xFFu << (y1_px & 7));
-    if (color == BLACK){
-        *p |= m1;
-    } else {
-        *p &= (unsigned char)~m1;
-    }
-
-    // Middle full bytes: all 8 bits set or cleared
-    while (++yb1 < yb2){
-        p += LCDWIDTH;
-        if (color == BLACK){
-            *p = 0xFFu;
-        } else {
-            *p = 0x00u;
-        }
-    }
-
-    // Last (partial) byte: bits from 0..y2
-    p += LCDWIDTH;
-    m2 = (unsigned char)(0xFFu >> (7 - (y2_px & 7)));
-    if (color == BLACK){
-        *p |= m2;
-    } else {
-        *p &= (unsigned char)~m2;
-    }
-}
-
-
-/**
  * Draws the outline of a rectangle at position (x, y) with the given width and height.
  * The edges are drawn inclusive (i.e., from x to x+w-1 and y to y+h-1).
  * The rectangle is clipped to the display bounds before drawing, and then the
@@ -369,142 +277,20 @@ static void drawVerLine_NoClip( int x_px, int y1_px, int y2_px, int color )
  */
 void drawRect( int x, int y, int w, int h, int color )
 {
-    int x1 = x;
-    int y1 = y;
-    int x2 = x + w - 1;
-    int y2 = y + h - 1;
+    int x2;
+    int y2;
 
-    if (w <= 0 || h <= 0){
+    if ( w <= 0 || h <= 0 ) {
         return;
     }
 
-    // Clip to screen bounds
-    if (x1 < 0){ x1 = 0; }
-    if (y1 < 0){ y1 = 0; }
-    if (x2 >= LCDWIDTH)  { x2 = LCDWIDTH  - 1; }
-    if (y2 >= LCDHEIGHT){ y2 = LCDHEIGHT - 1; }
+    x2 = x + w - 1;
+    y2 = y + h - 1;
 
-    if (x1 > x2 || y1 > y2){
-        return;
-    }
-
-    // Degenerate (thin) rectangles
-    if (x1 == x2){
-        drawVerLine_NoClip(x1, y1, y2, color);
-        return;
-    }
-    if (y1 == y2){
-        drawHorLine_NoClip(x1, x2, y1, color);
-        return;
-    }
-
-    // Top & bottom edges
-    drawHorLine_NoClip(x1, x2, y1, color);
-    drawHorLine_NoClip(x1, x2, y2, color);
-
-    // Left & right edges
-    drawVerLine_NoClip(x1, y1, y2, color);
-    drawVerLine_NoClip(x2, y1, y2, color);
-}
-
-
-/**
- * Draws a filled rectangle from (x, y) with width w and height h in the specified color.
- * The rectangle is clipped to the screen bounds once, then filled efficiently by:
- *  - Filling the first partial byte row (if unaligned at the top)
- *  - Filling any middle full byte rows directly
- *  - Filling the last partial byte row (if unaligned at the bottom)
- *
- * Uses bit masks to affect only the relevant pixels in partial rows.
- *
- * @param x      X coordinate of the top-left corner in pixels.
- * @param y      Y coordinate of the top-left corner in pixels.
- * @param w      Rectangle width in pixels.
- * @param h      Rectangle height in pixels.
- * @param color  Use BLACK to set pixels or WHITE to clear pixels.
- */
-void drawFillRect( int x, int y, int w, int h, int color )
-{
-    int x1 = x, y1 = y, x2 = x + w - 1, y2 = y + h - 1;
-    int yb1, yb2;
-    int xcur, br, span;
-
-    unsigned char mask_single_row = 0;
-    unsigned char inv_mask_single_row = 0;
-    unsigned char m1 = 0, inv1 = 0;
-    unsigned char m2 = 0, inv2 = 0;
-    unsigned char val = 0;
-
-    unsigned char *p;
-
-    if (w <= 0 || h <= 0){
-        return;
-    }
-
-    // Clip a pantalla
-    if (x1 < 0){ x1 = 0; }
-    if (y1 < 0){ y1 = 0; }
-    if (x2 >= LCDWIDTH)  { x2 = LCDWIDTH  - 1; }
-    if (y2 >= LCDHEIGHT){ y2 = LCDHEIGHT - 1; }
-    if (x1 > x2 || y1 > y2){
-        return;
-    }
-
-    yb1 = (y1 >> 3);   // primera fila de bytes
-    yb2 = (y2 >> 3);   // última fila de bytes
-
-    if (yb1 == yb2){
-        // Todo el recto cabe en una única fila de bytes
-        mask_single_row = (unsigned char)((0xFFu << (y1 & 7)) & (0xFFu >> (7 - (y2 & 7))));
-        inv_mask_single_row = (unsigned char)(~mask_single_row);
-
-        for (xcur = x1; xcur <= x2; ++xcur){
-            p = (unsigned char*)(FRAMEBUFF + xcur + yb1 * LCDWIDTH);
-            if (color){
-                *p |= mask_single_row;
-            } else {
-                *p &= inv_mask_single_row;
-            }
-        }
-        return;
-    }
-
-    // Primera fila parcial
-    m1   = (unsigned char)(0xFFu << (y1 & 7));
-    inv1 = (unsigned char)(~m1);
-    for (xcur = x1; xcur <= x2; ++xcur){
-        p = (unsigned char*)(FRAMEBUFF + xcur + yb1 * LCDWIDTH);
-        if (color){
-            *p |= m1;
-        } else {
-            *p &= inv1;
-        }
-    }
-
-    // Filas completas intermedias (si las hay)
-    if (yb2 - yb1 > 1){
-        val = (unsigned char)(color ? 0xFFu : 0x00u);
-        for (br = yb1 + 1; br <= yb2 - 1; ++br){
-            p = (unsigned char*)(FRAMEBUFF + x1 + br * LCDWIDTH);
-            span = x2 - x1 + 1;
-            while (span--){
-                *p++ = val;
-            }
-        }
-    }
-
-    // Última fila parcial
-    m2   = (unsigned char)(0xFFu >> (7 - (y2 & 7)));
-    inv2 = (unsigned char)(~m2);
-    p = (unsigned char*)(FRAMEBUFF + x1 + yb2 * LCDWIDTH);
-    for (xcur = x1; xcur <= x2; ++xcur){
-        if (color){
-            *p |= m2;
-        } else {
-            *p &= inv2;
-        }
-        ++p;
-    }
+    drawHorLine( x, x2, y, color );
+    drawHorLine( x, x2, y2, color );
+    drawVerLine( x, y, y2, color );
+    drawVerLine( x2, y, y2, color );
 }
 
 
@@ -546,38 +332,6 @@ void drawLine( int x0, int y0, int x1, int y1, int color )
             err += dx;
             y0 += sy;
         }
-    }
-}
-
-
-/**
- * Fills a rectangular area with vertical hatched stripes.
- * Stripes are spaced horizontally by the given step in pixels.
- *
- * @param x     X coordinate of the top-left corner.
- * @param y     Y coordinate of the top-left corner.
- * @param w     Rectangle width in pixels.
- * @param h     Rectangle height in pixels.
- * @param step  Horizontal spacing between vertical stripes in pixels.
- *              Minimum 1; if <= 0, a default spacing of 2 is used.
- */
-void fillRectHatched( int x, int y, int w, int h, int step )
-{
-    int xx, y2, xend;
-
-    if (w <= 0 || h <= 0){
-        return;
-    }
-    if (step <= 0){
-        step = 2;
-    }
-
-    y2   = y + h - 1;
-    xend = x + w;
-
-    /* Draw vertical stripes across the rectangle */
-    for (xx = x; xx < xend; xx += step){
-        drawVerLine(xx, y, y2, BLACK);
     }
 }
 
@@ -660,147 +414,3 @@ void drawActiveTab( int x, int y, int w, int h, int bevel )
 
     drawHorLine(x, x2, y2, BLACK);                     // bottom edge
 }
-
-
-/**
- * Draws a "half tab" shape with a flat vertical edge on the left side.
- * The outline is always drawn in black and no fill is applied inside.
- *
- * @param x The X coordinate of the top-left corner.
- * @param y The Y coordinate of the top-left corner.
- * @param w The width of the tab in pixels.
- * @param h The height of the tab in pixels.
- */
-void drawHalfTabLeft( int x, int y, int w, int h )
-{
-    int x2 = x + w - 1;
-    int y2 = y + h - 1;
-
-    if ( w <= 0 || h <= 0 ){
-        return;
-    }
-
-    drawVerLine(x, y,  y2, BLACK); // Left
-    drawHorLine(x, x2, y,  BLACK); // Top
-    drawHorLine(x, x2, y2, BLACK); // Bottom
-}
-
-
-/**
- * Draws a "half tab" shape with a flat vertical edge on the right side.
- * Optionally adds a bevel to the top-right corner. The outline is always black.
- *
- * @param x The X coordinate of the top-left corner.
- * @param y The Y coordinate of the top-left corner.
- * @param w The width of the tab in pixels.
- * @param h The height of the tab in pixels.
- * @param bevel The bevel size in pixels. If 0, the corner is square.
- */
-void drawHalfTabRight( int x, int y, int w, int h, int bevel )
-{
-    int x2, y2;
-
-    if (w <= 0 || h <= 0) return;
-    if (bevel < 0) bevel = 0;
-
-    // Clamp bevel
-    if ( bevel > w - 1 ){
-        bevel = w - 1;
-    }
-    if ( bevel > h - 1 ){
-        bevel = h - 1;
-    }
-
-    x2 = x + w - 1;
-    y2 = y + h - 1;
-
-    // Borders (always black)
-    if (bevel > 0){
-        drawHorLine(x, x2 - bevel, y, BLACK);          // Top until bevel
-        drawLine(x2 - bevel, y, x2, y + bevel, BLACK); // Bevel
-        drawVerLine(x2, y + bevel, y2, BLACK);         // Right side below bevel
-    } else {
-        drawHorLine(x, x2, y, BLACK);
-        drawVerLine(x2, y, y2, BLACK);
-    }
-
-    drawHorLine(x, x2, y2, BLACK); // Bottom
-}
-
-
-/**
- * Draws an "about tab" shape with an optional bevel at the top-left corner.
- * The bevel size is clamped to fit within the tab dimensions.
- * The outline is always drawn in black.
- * Optionally, the inside of the tab can be filled in black, respecting the bevel shape.
- *
- * @param x     The X coordinate of the top-left corner.
- * @param y     The Y coordinate of the top-left corner.
- * @param w     The width of the tab in pixels.
- * @param h     The height of the tab in pixels.
- * @param bevel The bevel size in pixels. If 0, the tab has square corners.
- * @param fill  If non-zero, the inside of the tab is filled in black; if zero, only the outline is drawn.
- */
-void drawAboutTab( int x, int y, int w, int h, int bevel, int fill )
-{
-    int x2, y2;
-
-    if (w <= 0 || h <= 0) return;
-    if (bevel < 0) bevel = 0;
-
-    // Clamp so the diagonal fits
-    if (bevel > w - 1) bevel = w - 1;
-    if (bevel > h - 1) bevel = h - 1;
-
-    x2 = x + w - 1;
-    y2 = y + h - 1;
-
-    // Fill inside, clipped to the top-left bevel
-    if (fill && w > 2 && h > 2){
-        int yy;
-        const int innerR = x2 - 1;          // right interior
-        const int innerL = x  + 1;          // left interior baseline
-        const int bevelLimit = y + bevel;   // last row affected by bevel
-
-        for (yy = y + 1; yy <= y2 - 1; ++yy){
-            int xl;
-
-            if (bevel > 0 && yy <= bevelLimit){
-                // Diagonal from (x, y + bevel) to (x + bevel, y).
-                // For this row: xdiag = (x + bevel) - (yy - y).
-                // Fill from xdiag + 1 so we never overwrite the bevel pixel.
-                int xdiag = (x + bevel) - (yy - y);
-                xl = xdiag + 1;
-                if (xl < innerL) xl = innerL;   // safety
-            } else {
-                xl = innerL;
-            }
-
-            if (xl <= innerR){
-                fillSpanFast(xl, innerR, yy, BLACK);
-            }
-        }
-    }
-
-    // --- Borders (always black) ---
-    if ( bevel > 0 ){
-        drawLine(x, y + bevel, x + bevel, y, BLACK); // Bevel (top-left corner)
-        drawHorLine(x + bevel, x2, y, BLACK);        // Top edge after bevel
-        drawVerLine(x2, y, y2, BLACK);               // Right vertical edge
-    } else {
-        // No bevel: full top and right
-        drawHorLine(x, x2, y, BLACK);
-        drawVerLine(x2, y, y2, BLACK);
-    }
-
-    // Left side below bevel
-    if (bevel > 0){
-        drawVerLine(x, y + bevel, y2, BLACK);
-    } else {
-        drawVerLine(x, y, y2, BLACK);
-    }
-
-    // Bottom edge
-    drawHorLine(x, x2, y2, BLACK);
-}
-

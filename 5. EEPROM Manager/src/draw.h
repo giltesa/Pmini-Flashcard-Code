@@ -29,14 +29,9 @@ void drawPixel( int x, int y, int color );
 void drawHorLine( int x1, int x2, int y, int color );
 void drawVerLine( int x, int y1, int y2, int color );
 void drawRect( int x, int y, int w, int h, int color );
-void drawFillRect( int x, int y, int w, int h, int color );
 void drawLine( int x0, int y0, int x1, int y1, int color );
-void fillRectHatched( int x, int y, int w, int h, int step );
 
 /* UI helper */
 void drawActiveTab( int x, int y, int w, int h, int bevel );
-void drawHalfTabLeft( int x, int y, int w, int h );
-void drawHalfTabRight( int x, int y, int w, int h, int bevel );
-void drawAboutTab( int x, int y, int w, int h, int bevel, int fill );
 
 #endif

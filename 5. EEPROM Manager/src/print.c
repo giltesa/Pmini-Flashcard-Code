@@ -16,22 +16,32 @@ static int inBoundsX( int x_px ) {
 /**
  * Returns a pointer to the 6x8 glyph for a given ASCII character.
  *
- * The returned pointer indexes the font table as font6x8[c - 32].
- *
  * @param c ASCII character code.
  * @return Pointer to the glyph data in font6x8 (6 bytes, one per column).
  */
 static const unsigned char* glyphPtr( unsigned char c ) {
-    if ( c < 32 ) {
-        // Map control codes to space
-        c = 32;
-    } else if ( c <= 126 ) {
-        // Printable ASCII
-    } else {
-        // Map out-of-range codes to '?'
-        c = 63;
+    if ( c == ' ' ) {
+        return font6x8[0];
     }
-    return font6x8[c - 32];
+
+    if ( c == '.' ) {
+        return font6x8[1];
+    }
+
+    if ( c >= '0' && c <= '9' ) {
+        return font6x8[2 + ( c - '0' )];
+    }
+
+    if ( c >= ':' && c <= '@' ) {
+        return font6x8[12 + ( c - ':' )];
+    }
+
+    if ( c >= 'A' && c <= 'Z' ) {
+        return font6x8[19 + ( c - 'A' )];
+    }
+
+    // Unsupported characters are shown as '?'.
+    return font6x8[17];
 }
 
 
@@ -94,98 +104,6 @@ static void fillCharCell( int x_px, int y_px, int color ) {
                 }
             }
         }
-    }
-}
-
-
-/**
- * Renders a single 6×8 character at a character-aligned position.
- * X is in pixels; Y is the byte-row index (0..(LCDHEIGHT/8 - 1)).
- * Faster than printCharPx because it assumes Y is aligned (no bit shifts).
- *
- * @param x_px  X coordinate in pixels (left edge of the cell).
- * @param y     Byte-row index (0..(LCDHEIGHT/8 - 1)).
- * @param c     Character to render.
- * @param color Color mode.
- */
-void printChar( int x_px, int y, unsigned char c, int color ) {
-    int i;
-    volatile unsigned char* p;
-    const unsigned char* glyph = glyphPtr(c);
-
-    // Bounds: y is a byte-row index, so convert to pixel check via range.
-    if ((unsigned)y >= (LCDHEIGHT / 8)) {
-        return;
-    }
-    if (!inBoundsX(x_px) || !inBoundsX(x_px + CHARWIDTH - 1)) {
-        return;
-    }
-
-    p = (volatile unsigned char*)(FRAMEBUFF + x_px + y * LCDWIDTH);
-
-    if (color == WHITE_ON_BLACK) {
-        // Fill background black, then carve the glyph as white (0 bits)
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] = 0xFFu;
-        }
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] &= (unsigned char)(~glyph[i]);
-        }
-    } else if (color == BLACK_ON_WHITE) {
-        // Fill background white, then draw glyph in black (1 bits)
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] = 0x00u;
-        }
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] |= glyph[i];
-        }
-    } else if (color == BLACK) {
-        // Black text only; background untouched
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] |= glyph[i];
-        }
-    } else { // WHITE
-        // White text only; background untouched
-        for (i = 0; i < CHARWIDTH; ++i) {
-            p[i] &= (unsigned char)(~glyph[i]);
-        }
-    }
-}
-
-
-/**
- * Renders a single numeric digit (0–9) at a character-aligned position.
- * X is in pixels; Y is the byte-row index (0..(LCDHEIGHT/8 - 1)).
- * Internally converts the digit to its ASCII code ('0' = 48) before rendering.
- *
- * @param x_px  X coordinate in pixels (left edge of the cell).
- * @param y     Byte-row index (0..(LCDHEIGHT/8 - 1)).
- * @param c     Digit to render (0–9).
- * @param color Color mode.
- */
-void printDigit( int x_px, int y, unsigned char c, int color ) {
-    printChar(x_px, y, (unsigned char)(c + 48), color);
-}
-
-
-/**
- * Renders a null-terminated string at the given character-aligned position.
- * Drawing stops when the next character would start beyond the right edge
- * of the display (only full 6-pixel wide characters are drawn).
- *
- * @param x_px  Starting X position in pixels (aligned to CHARWIDTH).
- * @param y     Byte-row index (0..(LCDHEIGHT/8 - 1)).
- * @param str   Null-terminated string to render.
- * @param color Rendering mode.
- */
-void print( int x_px, int y, const char* str, int color ) {
-    while (*str) {
-        if (x_px > (LCDWIDTH - CHARWIDTH)) {
-            break;
-        }
-        printChar(x_px, y, (unsigned char)*str, color);
-        x_px += CHARWIDTH;
-        ++str;
     }
 }
 

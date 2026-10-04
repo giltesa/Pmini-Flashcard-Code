@@ -109,12 +109,6 @@ void EEPROM_SDA_LO ( void ) {
 }
 
 
-void setSCLOut( void ) {
-  IO_DIR = IO_DIR | 0x08;
-}
-void setSCLIn( void ) {
-  IO_DIR = IO_DIR & 0xF7;
-}
 
 void writeDir( void ) {
   IO_DIR = IO_DIR | 0x04;
@@ -171,55 +165,6 @@ void sendByte( uint8_t b ) {
   EEPROM_SCL_HI();
 }
 
-uint8_t readEEPROM( uint16_t a ) {
-  uint8_t c, i;
-  c = 0;
-
-  // Set bus direction.
-  IO_DIR = ( IO_DIR | 0x04 | 0x08 );
-
-  // Set start condition.
-  startCondition();
-
-  // Send write command.
-  sendByte( writeCmd );
-
-  // Send upper address.
-  sendByte( a >> 8 );
-
-  // Send lower address.
-  sendByte( a );
-
-  EEPROM_SCL_LO();
-  writeDir();
-  EEPROM_SDA_HI();
-
-  EEPROM_SCL_HI();
-
-  // Start condition.
-  startCondition();
-
-  // Send read command.
-  sendByte( readCmd );
-
-  // Read one byte.
-  for ( i = 0; i < 8; ++i ) {
-    EEPROM_SCL_LO();
-    EEPROM_SCL_HI();
-    c = ( c | ( ( ( IO_DATA & 0x04 ) >> 2 ) << ( 7 - i ) ) );
-  }
-
-  // No ack.
-  EEPROM_SCL_LO();
-  writeDir();
-  EEPROM_SDA_LO();
-  EEPROM_SCL_HI();
-
-  // Stop condition.
-  EEPROM_SDA_HI();
-
-  return c;
-}
 
 void readEEPROMBytes( uint16_t a, uint8_t* buffer, uint16_t bytes ) {
   uint8_t c, i;
@@ -285,38 +230,6 @@ void readEEPROMBytes( uint16_t a, uint8_t* buffer, uint16_t bytes ) {
   EEPROM_SDA_HI();
 }
 
-void writeEEPROMByte( uint16_t a, uint8_t b ) {
-  uint8_t c, i;
-  c = 0;
-
-  // Set bus direction.
-  IO_DIR = ( IO_DIR | 0x04 | 0x08 );
-
-  startCondition();
-
-  // Send write command.
-  sendByte( writeCmd );
-
-  // Send upper address.
-  sendByte( a >> 8 );
-
-  // Send lower address.
-  sendByte( a );
-
-  // Send single data byte.
-  sendByte( b );
-
-  EEPROM_SCL_LO();
-  writeDir();
-  EEPROM_SDA_LO();
-
-  EEPROM_SCL_HI();
-
-  delay();
-
-  // Stop condition.
-  EEPROM_SDA_HI();
-}
 
 void copyToEEPROM() {
   uint8_t page, i, c;
@@ -372,21 +285,6 @@ void copyToEEPROM() {
   }
 }
 
-void waitForFlash() {
-  volatile cnt, cnt2, dummy;
-
-  // Transfer to Flash.
-  *( (uint8_t *) REG_STOREFLASH ) = 1;
-
-  // Yes, very pretty. Very much calculated.
-  for ( cnt = 0; cnt < DELAYMAX; ++cnt ) {
-    dummy++;
-
-    for ( cnt2 = 0; cnt2 < DELAYMAX; ++cnt2 ) {
-      dummy++;
-    }
-  }
-}
 
 uint8_t keyScan( void ) {
   uint8_t i;
