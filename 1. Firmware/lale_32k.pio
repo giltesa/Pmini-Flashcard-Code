@@ -1,4 +1,4 @@
-.program lale_latch_menu
+.program lale_latch_32k
 
 // Get the base array address.
 pull block
@@ -52,9 +52,9 @@ wait 0 gpio 12
 
 
 % c-sdk {
-static inline void lale_latch_menu_program_init(PIO pio, uint sm, uint offset, uint addrPin, uint lalePin ) {
+static inline void lale_latch_32k_program_init(PIO pio, uint sm, uint offset, uint addrPin, uint lalePin ) {
 
-  pio_sm_config c = lale_latch_menu_program_get_default_config( offset );
+  pio_sm_config c = lale_latch_32k_program_get_default_config( offset );
   // Set address to read.
   pio_sm_set_consecutive_pindirs(pio, sm, addrPin, 10, false);
   // Set LALE to read.
