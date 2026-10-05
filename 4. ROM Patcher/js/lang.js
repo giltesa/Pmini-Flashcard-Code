@@ -20,6 +20,7 @@ const LANGUAGES = {
     dropzone: "Drag & drop .min here or",
     chooseFiles: "Choose files",
     gamesHint: "Max games: 20. Max file size: 512 KiB.",
+    includeEepromManager: "Include EEPROM Manager",
 
     // ===== Firmware =====
     firmware: "Base firmware (UF2)",
@@ -94,6 +95,7 @@ const LANGUAGES = {
     dropzone: ".min hier ablegen oder",
     chooseFiles: "Dateien wählen",
     gamesHint: "Max. Spiele: 20. Max. Dateigröße: 512 KiB.",
+    includeEepromManager: "EEPROM Manager einschließen",
 
     firmware: "Basis-Firmware (UF2)",
     reloadFirmware: "Firmware neu laden",
@@ -163,6 +165,7 @@ const LANGUAGES = {
     dropzone: "Arrastra archivos .min aquí o",
     chooseFiles: "Seleccionar archivos",
     gamesHint: "Máximo 20 juegos. Tamaño máximo: 512 KiB.",
+    includeEepromManager: "Incluir EEPROM Manager",
 
     firmware: "Firmware base (UF2)",
     reloadFirmware: "Recargar firmware",
@@ -232,6 +235,7 @@ const LANGUAGES = {
     dropzone: "Glissez-déposez des fichiers .min ici ou",
     chooseFiles: "Choisir des fichiers",
     gamesHint: "Max jeux : 20. Taille max : 512 KiB.",
+    includeEepromManager: "Inclure EEPROM Manager",
 
     firmware: "Firmware de base (UF2)",
     reloadFirmware: "Recharger le firmware",
@@ -304,6 +308,7 @@ const LANGUAGES = {
     dropzone: ".min trascina qui o",
     chooseFiles: "Seleziona file",
     gamesHint: "Max 20 giochi. Max 512 KiB per file.",
+    includeEepromManager: "Includi EEPROM Manager",
 
     // ===== Firmware =====
     firmware: "Firmware base (UF2)",
@@ -379,6 +384,7 @@ const LANGUAGES = {
     dropzone: ".minをドロップ または",
     chooseFiles: "ファイルを選択",
     gamesHint: "最大20ゲーム。最大サイズ: 512 KiB。",
+    includeEepromManager: "EEPROM Managerを含める",
 
     firmware: "ベースファームウェア (UF2)",
     reloadFirmware: "再読み込み",
@@ -451,6 +457,7 @@ const LANGUAGES = {
     dropzone: ".sleep .min bestanden hier of",
     chooseFiles: "Bestanden kiezen",
     gamesHint: "Max 20 games. Max bestandsgrootte: 512 KiB.",
+    includeEepromManager: "EEPROM Manager opnemen",
 
     // ===== Firmware =====
     firmware: "Basisfirmware (UF2)",
@@ -521,6 +528,7 @@ const LANGUAGES = {
     dropzone: ".min przeciągnij tutaj lub",
     chooseFiles: "Wybierz pliki",
     gamesHint: "Maks. 20 gier. Maks. 512 KiB na plik.",
+    includeEepromManager: "Dołącz EEPROM Manager",
 
     // ===== Firmware =====
     firmware: "Firmware bazowy (UF2)",
@@ -596,6 +604,7 @@ const LANGUAGES = {
     dropzone: "Arraste .min aqui ou",
     chooseFiles: "Selecionar arquivos",
     gamesHint: "Máx. 20 jogos. Máx. 512 KiB.",
+    includeEepromManager: "Incluir EEPROM Manager",
 
     firmware: "Firmware base (UF2)",
     reloadFirmware: "Recarregar firmware",
@@ -668,6 +677,7 @@ const LANGUAGES = {
     dropzone: ".min ลากมาวางที่นี่ หรือ",
     chooseFiles: "เลือกไฟล์",
     gamesHint: "สูงสุด 20 เกม ไฟล์ละไม่เกิน 512 KiB",
+    includeEepromManager: "รวม EEPROM Manager",
 
     // ===== Firmware =====
     firmware: "เฟิร์มแวร์ฐาน (UF2)",
@@ -746,6 +756,7 @@ const LANGUAGES = {
     dropzone: ".min 拖放或",
     chooseFiles: "选择文件",
     gamesHint: "最多20个游戏，单文件最大512 KiB。",
+    includeEepromManager: "包含 EEPROM Manager",
 
     // ===== Firmware =====
     firmware: "基础固件 (UF2)",

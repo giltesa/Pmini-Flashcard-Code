@@ -34,6 +34,7 @@
 
 // ===== Constants =====
 const DEFAULT_FW_PATH   = 'firmware/PM2040.uf2';
+const EEPROM_MGR_PATH   = "assets/EEPROM Manager.min";
 const NAME_MIN          = 1;
 const NAME_MAX          = 14;
 const MAX_GAMES         = 20;
@@ -42,6 +43,7 @@ const LANG_KEY          = 'PM2040_lang';
 const THEME_KEY         = 'PM2040_theme';
 const CAPS_KEY          = 'PM2040_caps';
 const NAME_SRC_KEY      = 'PM2040_nameSrc';
+const EEPROM_MGR_KEY    = 'PM2040_eepromManager';
 
 // Header offsets
 const HDR_GAME_CODE_OFF = 0x21AC; // 4 bytes
@@ -162,6 +164,28 @@ function initCaps() {
 
 function isCapsOn() {
 	return $('#capsToggle')?.checked === true;
+}
+
+function applyEepromManagerPreference(flag) {
+	$('#eepromManagerToggle').checked = !!flag;
+
+	try {
+		localStorage.setItem(EEPROM_MGR_KEY, flag ? '1' : '0');
+	} catch (_) {}
+}
+
+function initEepromManagerPreference() {
+	let flag = true;
+
+	try {
+		const saved = localStorage.getItem(EEPROM_MGR_KEY);
+
+		if (saved !== null) {
+			flag = saved === '1';
+		}
+	} catch (_) {}
+
+	$('#eepromManagerToggle').checked = flag;
 }
 
 // ===== Firmware status =====
@@ -324,6 +348,60 @@ function syncEntriesFromDOM() {
 	renumber();
 }
 
+// ===== EEPROM Manager =====
+async function addEepromManager() {
+	if (entries.some(e => e.isEepromManager)) return;
+
+	if (entries.length >= MAX_GAMES) {
+		alert(t('maxGamesReached').replace('{max}', MAX_GAMES));
+		applyEepromManagerPreference(false);
+		return;
+	}
+
+	try {
+		const res = await fetch(EEPROM_MGR_PATH);
+		if (!res.ok) throw new Error('HTTP ' + res.status);
+
+		const bytes = await res.arrayBuffer();
+		if (!$('#eepromManagerToggle').checked) return;
+
+		const filename = 'EEPROM Manager.min';
+		const gameCode = parseGameCodeFromHeader(bytes);
+		const gameId = sanitizeForPath(gameCode || defaultNameFromFilename(filename).toLowerCase());
+		const binaryName = parseTitleFromHeader(bytes);
+		const defaultName = defaultNameFromFilename(filename);
+
+		const entry = {
+			id: idSeq++,
+			filename,
+			size: bytes.byteLength,
+			bytes,
+			gameId,
+			gameCode: gameCode || null,
+			binaryName: binaryName || null,
+			name: defaultName,
+			nameSource: 'filename',
+			isEepromManager: true
+		};
+
+		entries.unshift(entry);
+		appendRow(entry, true);
+		renumber();
+	} catch (e) {
+		console.warn('[eeprom-manager-load-failed]', e);
+        applyEepromManagerPreference(false);
+	}
+}
+
+function removeEepromManager() {
+	const entry = entries.find(e => e.isEepromManager);
+	if (!entry) return;
+
+	entries = entries.filter(e => e.id !== entry.id);
+	document.querySelector(`#tbody tr[data-id="${entry.id}"]`)?.remove();
+	renumber();
+}
+
 // ===== Add files =====
 async function addFiles(files) {
 	let list = Array.from(files || []).filter(f => !!f);
@@ -383,7 +461,7 @@ async function addFiles(files) {
 }
 
 // ===== Table rendering =====
-function appendRow(entry) {
+function appendRow(entry, prepend = false) {
 	const tr = document.createElement('tr');
 	tr.draggable = true;
 	tr.dataset.id = entry.id;
@@ -445,11 +523,15 @@ function appendRow(entry) {
 		}
 	});
 
-	tr.querySelector('.btn-del').addEventListener('click', () => {
-		entries = entries.filter(e => e.id !== entry.id);
-		tr.remove();
-		renumber();
-	});
+    tr.querySelector('.btn-del').addEventListener('click', () => {
+        entries = entries.filter(e => e.id !== entry.id);
+        tr.remove();
+
+        if (entry.isEepromManager) {
+            applyEepromManagerPreference(false);
+        }
+        renumber();
+    });
 
 	tr.addEventListener('dragstart', (e) => {
 		dragRow = tr;
@@ -480,7 +562,9 @@ function appendRow(entry) {
 
     rerenderDynamicUI(tr);
 
-	document.getElementById('tbody').appendChild(tr);
+	const tbody = document.getElementById('tbody');
+	if (prepend) tbody.prepend(tr);
+	else tbody.appendChild(tr);
 }
 
 function renumber() {
@@ -621,8 +705,13 @@ async function runPatch() {
     initLanguage();
 	initTheme();
 	initCaps();
-	initNameSource();
-	tryLoadDefaultFirmware();
+    initNameSource();
+    initEepromManagerPreference();
+    tryLoadDefaultFirmware();
+
+    if ($('#eepromManagerToggle').checked) {
+        addEepromManager();
+    }
 
     $('#langSel').addEventListener('change', (e) => {
         applyLanguage(e.target.value);
@@ -630,6 +719,15 @@ async function runPatch() {
     });
 	$('#themeSel').addEventListener('change', (e) => applyTheme(e.target.value));
 	$('#capsToggle').addEventListener('change', (e) => applyCaps(e.target.checked));
+    $('#eepromManagerToggle').addEventListener('change', (e) => {
+        applyEepromManagerPreference(e.target.checked);
+
+        if (e.target.checked) {
+            addEepromManager();
+        } else {
+            removeEepromManager();
+        }
+    });
 
 	const dz = $('#dropzone');
 	const fileInput = $('#fileInput');
@@ -651,6 +749,7 @@ async function runPatch() {
 	$('#btnClear').addEventListener('click', () => {
 		entries = [];
 		$('#tbody').innerHTML = '';
+		applyEepromManagerPreference(false);
 		renumber();
 	});
 

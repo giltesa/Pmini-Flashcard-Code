@@ -102,7 +102,13 @@
 
                 <div class="content">
 
-                    <h2 data-i18n="gameList">Game list</h2>
+                    <div class="game-list-header">
+                        <h2 data-i18n="gameList">Game list</h2>
+
+                        <div class="builtin-options">
+                            <label><input id="eepromManagerToggle" type="checkbox" checked /> <span data-i18n="includeEepromManager">Include EEPROM Manager</span></label>
+                        </div>
+                    </div>
 
                     <div class="hint" style="margin-bottom:8px" data-i18n="gameListHint">
                         Reorder by dragging the handle (≡). Names may exceed 14 chars (will be truncated on patch). Invalid state shows red + hint. Use the global selector to switch all name sources.
@@ -157,7 +163,7 @@
         <script src="js/fflate.js"></script>
         <script src="js/lang.js"></script>
         <script src="js/patcher.js"></script>
-        <script src="js/covers.js" defer></script>
+        <script src="js/covers.js"></script>
         <script src="js/main.js"></script>
 
     </body>
