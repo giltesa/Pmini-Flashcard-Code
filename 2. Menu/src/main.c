@@ -225,7 +225,7 @@ void drawAboutScreenAndBlocking(void)
         "PMini Flashcard",
         "& Menu Styling ",
         "               ",
-        "    2025-12    "
+        "    2026-10    "
     };
 
     const uint8_t ABOUT_LINES    = (uint8_t)(sizeof(aboutText) / sizeof(aboutText[0]));
