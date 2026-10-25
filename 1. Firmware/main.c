@@ -500,8 +500,9 @@ void __not_in_flash_func( doPIOStuff() ) {
         // Stop WE checking SMs.
         pio_sm_set_enabled( pioWE, sm_we, false );
         pio_sm_set_enabled( pioWE, sm_we_addr, false );
-
-      } else {
+      }
+      #ifdef EEPROM_RESTORE
+      else {
         // Load the EEPROM manger into the memory which was used for the
         // multi ROM menu.
         memcpy( rom_menu, (uint8_t*) romAddress, EEPROM_MANAGER_SIZE );
@@ -514,6 +515,8 @@ void __not_in_flash_func( doPIOStuff() ) {
 
         // Leave the write checking SMs on.
       }
+      #endif //EEPROM_RESTORE
+
   #endif // MULTICART
 
   #ifdef EEPROM_RESTORE
