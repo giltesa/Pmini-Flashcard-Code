@@ -12,6 +12,7 @@ GoogleSketchUp
 obj/*
 *.obj
 build/
+.vscode
 MACD.png
 MACE.png
 MACF.png

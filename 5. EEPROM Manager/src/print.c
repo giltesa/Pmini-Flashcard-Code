@@ -40,6 +40,22 @@ static const unsigned char* glyphPtr( unsigned char c ) {
         return font6x8[19 + ( c - 'A' )];
     }
 
+    if ( c >= '!' && c <= '-' ) {
+        return font6x8[45 + ( c - '!' )];
+    }
+
+    if ( c == '/' ) {
+        return font6x8[58];
+    }
+
+    if ( c >= '[' && c <= '`' ) {
+        return font6x8[59 + ( c - '[' )];
+    }
+
+    if ( c >= '{' && c <= '~' ) {
+        return font6x8[65 + ( c - '{' )];
+    }
+
     // Unsupported characters are shown as '?'.
     return font6x8[17];
 }

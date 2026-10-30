@@ -6,6 +6,8 @@
 #include "pm.h"
 #include "print.h"
 #include "draw.h"
+#include "save.h"
+#include "print_small.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -39,7 +41,7 @@
 #define MAXEEPROM 8191
 
 // RP2040 EEPROM temp address.
-#define CARTEEPROM 0x4000
+#define CARTEEPROM 0x6000
 
 
 volatile uint8_t flag;
@@ -50,7 +52,10 @@ const uint8_t writeCmd = 0xA0;
 enum menu {
   MAIN,
   BACKUP,
-  RESTORE
+  RESTORE,
+  VIEW,
+  VIEW_RESULT,
+  DELETE_CONFIRM
 };
 
 void delay( void ) {
@@ -286,6 +291,46 @@ void copyToEEPROM() {
 }
 
 
+// Bounded physical EEPROM writes; preserve RESTORE's page/STOP/delay sequence.
+static void writeEEPROMRange( uint16_t addr, const uint8_t* data, uint16_t bytes ) {
+  uint8_t chunk, i;
+
+  if ( addr > MAXEEPROM || bytes > MAXEEPROM + 1 - addr ) {
+    return;
+  }
+
+  while ( bytes ) {
+    chunk = 32 - ( addr % 32 );
+    if ( bytes < chunk ) {
+      chunk = bytes;
+    }
+
+    IO_DIR = ( IO_DIR | 0x04 | 0x08 );
+    startCondition();
+    sendByte( writeCmd );
+    sendByte( addr >> 8 );
+    sendByte( addr );
+    for ( i = 0; i < chunk; ++i ) {
+      sendByte( *data );
+      ++data;
+    }
+
+    EEPROM_SCL_LO();
+    writeDir();
+    EEPROM_SDA_LO();
+    EEPROM_SCL_HI();
+    delay();
+    EEPROM_SDA_HI();
+
+    // Same fixed programming wait as RESTORE, including the final chunk.
+    // The existing driver does not sample ACK or perform ACK polling.
+    delayLong();
+    addr += chunk;
+    bytes -= chunk;
+  }
+}
+
+
 uint8_t keyScan( void ) {
   uint8_t i;
   uint8_t k = KEY_PAD;
@@ -328,6 +373,8 @@ enum menu curMenu = MAIN;
 #define UI_MAIN_Y       15
 #define UI_SLOT_Y       15
 #define UI_ITEM_STEP    12
+#define UI_VIEW_Y       14
+#define UI_VIEW_STEP    10
 
 
 static void clearScreen( void ) {
@@ -348,6 +395,10 @@ static void drawFrameWithTab( const char* title ) {
 
 
 static int itemY( uint8_t index ) {
+  if ( curMenu == VIEW ) {
+    return UI_VIEW_Y + ( index * UI_VIEW_STEP );
+  }
+
   if ( curMenu == MAIN ) {
     return UI_MAIN_Y + ( index * UI_ITEM_STEP );
   }
@@ -380,10 +431,23 @@ void drawMenu( void ) {
 
   if ( curMenu == MAIN ) {
     drawFrameWithTab( "EEPROM MGR" );
-    printPx( UI_LABEL_X, UI_MAIN_Y, "BACKUP", BLACK );
-    printPx( UI_LABEL_X, UI_MAIN_Y + UI_ITEM_STEP, "RESTORE", BLACK );
+    printPx( UI_LABEL_X, UI_MAIN_Y, "VIEW", BLACK );
+    printPx( UI_LABEL_X, UI_MAIN_Y + UI_ITEM_STEP, "BACKUP", BLACK );
+    printPx( UI_LABEL_X, UI_MAIN_Y + 2 * UI_ITEM_STEP, "RESTORE", BLACK );
 
-    printPx( 57, 54, "A:NEXT", BLACK );
+    printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:NEXT" ), 56, "A:NEXT", BLACK );
+
+  } else if ( curMenu == VIEW ) {
+    drawFrameWithTab( "VIEW" );
+    printPx( UI_LABEL_X, UI_VIEW_Y, "EEPROM", BLACK );
+
+    for ( i = 1; i <= EEPROMSLOTS; ++i ) {
+      printPx( UI_LABEL_X, UI_VIEW_Y + i * UI_VIEW_STEP, "SLOT", BLACK );
+      printDigitPx( UI_LABEL_X + 30, UI_VIEW_Y + i * UI_VIEW_STEP, i, BLACK );
+    }
+
+    printSmallNavPx( 3, 56, "B:BACK", BLACK );
+    printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:VIEW" ), 56, "A:VIEW", BLACK );
 
   } else if ( curMenu == BACKUP ) {
     drawFrameWithTab( "BACKUP" );
@@ -392,8 +456,8 @@ void drawMenu( void ) {
       drawSlotLabel( i );
     }
 
-    printPx( 2, 54, "B:BACK", BLACK );
-    printPx( 51, 54, "A:START", BLACK );
+    printSmallNavPx( 3, 56, "B:BACK", BLACK );
+    printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:START" ), 56, "A:START", BLACK );
 
   } else if ( curMenu == RESTORE ) {
     drawFrameWithTab( "RESTORE" );
@@ -402,8 +466,8 @@ void drawMenu( void ) {
       drawSlotLabel( i );
     }
 
-    printPx( 2, 54, "B:BACK", BLACK );
-    printPx( 51, 54, "A:START", BLACK );
+    printSmallNavPx( 3, 56, "B:BACK", BLACK );
+    printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:START" ), 56, "A:START", BLACK );
   }
 }
 
@@ -432,7 +496,7 @@ static void drawOperationScreen( enum menu operation, uint8_t slot, uint8_t done
   printDigitPx( 57, 36, (unsigned char)( slot + 1 ), BLACK );
 
   if ( done ) {
-    printPx( 2, 54, "B:BACK", BLACK );
+    printSmallNavPx( 3, 56, "B:BACK", BLACK );
   }
 }
 
@@ -450,11 +514,138 @@ void waitForButton( void ) {
 
 uint8_t readBuffer[ 32 ];
 
+
+static uint8_t deleteEEPROMHeader( uint8_t source, uint8_t index ) {
+  uint16_t addr;
+  uint8_t i;
+
+  if ( source != 0 || index >= SAVECOUNT ) {
+    return 0;
+  }
+
+  addr = 4 + index * SAVEHEADERSIZE;
+  readEEPROMBytes( addr, readBuffer, SAVEHEADERSIZE );
+  if ( classifySaveHeader( readBuffer ) != SAVE_OCCUPIED ) {
+    return 0;
+  }
+
+  memset( readBuffer, 0, SAVEHEADERSIZE );
+  writeEEPROMRange( addr, readBuffer, SAVEHEADERSIZE );
+  readEEPROMBytes( addr, readBuffer, SAVEHEADERSIZE );
+  for ( i = 0; i < SAVEHEADERSIZE; ++i ) {
+    if ( readBuffer[ i ] != 0 ) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+
+static void readViewBytes( uint8_t source, uint16_t addr, uint8_t bytes ) {
+  uint8_t i;
+
+  // All callers use the fixed conventional directory, at offsets 0..111.
+  if ( !source ) {
+    readEEPROMBytes( addr, readBuffer, bytes );
+  } else {
+    for ( i = 0; i < bytes; ++i ) {
+      readBuffer[ i ] = *( (volatile uint8_t *) ( CARTEEPROM + addr + i ) );
+    }
+  }
+}
+
+
+static void drawViewCursor( uint8_t index, int color ) {
+  int y = 14 + index * 6;
+
+  printSmallPx( 4, y, ">", color );
+}
+
+
+static void drawViewScreen( uint8_t source ) {
+  uint8_t i, kind, magic;
+  uint16_t addr = 4;
+  const char* title;
+
+  if ( !source ) {
+    drawFrameWithTab( "EEPROM" );
+  } else {
+    drawFrameWithTab( "SLOT" );
+    printDigitPx( 32, UI_TAB_Y + 2, source, WHITE );
+
+    // Selection only: VIEW never transfers bytes or stores backup flash.
+    *( (volatile uint8_t *) REG_SLOT ) = source - 1;
+  }
+
+  readViewBytes( source, 0, 4 );
+  magic = ( readBuffer[ 0 ] == 'G' && readBuffer[ 1 ] == 'B' &&
+            readBuffer[ 2 ] == 'M' && readBuffer[ 3 ] == 'N' );
+
+  for ( i = 0; i < SAVECOUNT; ++i ) {
+    readViewBytes( source, addr, SAVEHEADERSIZE );
+    kind = classifySaveHeader( readBuffer );
+
+    if ( kind == SAVE_OCCUPIED ) {
+      title = saveTitle( readBuffer );
+    } else if ( kind == SAVE_FREE ) {
+      title = magic ? "EMPTY" : "UNKNOWN";
+    } else {
+      title = "INVALID";
+    }
+
+    // Five-pixel names with one blank row between entries.
+    printSmallPx( 10, 14 + i * 6, title, BLACK );
+    addr += SAVEHEADERSIZE;
+  }
+
+  printSmallNavPx( 3, 56, "B:BACK", BLACK );
+  if ( !source ) {
+    printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:DELETE" ), 56, "A:DELETE", BLACK );
+  }
+}
+
+
+static void drawDeleteScreen( uint8_t source, uint8_t index ) {
+  const char* title;
+  const char* prompt = "DELETE SAVE?";
+  int lineHeight = 8;
+  int lineGap = 4;
+  int footerY = 54;
+  int bodyTop = UI_CONTENT_Y + 1;
+  int bodyY = bodyTop + ( footerY - bodyTop - ( 2 * lineHeight + lineGap ) ) / 2;
+  int titleWidth, promptWidth;
+
+  if ( !source ) {
+    drawFrameWithTab( "EEPROM" );
+  } else {
+    drawFrameWithTab( "SLOT" );
+    printDigitPx( 32, UI_TAB_Y + 2, source, WHITE );
+  }
+
+  // Read only the selected header; no stored title or header mirror.
+  readViewBytes( source, 4 + index * SAVEHEADERSIZE, SAVEHEADERSIZE );
+  if ( classifySaveHeader( readBuffer ) == SAVE_OCCUPIED ) {
+    title = saveTitle( readBuffer );
+  } else {
+    title = "INVALID";
+  }
+
+  titleWidth = strlen( title ) * CHARWIDTH;
+  promptWidth = strlen( prompt ) * CHARWIDTH;
+  printPx( ( LCDWIDTH - titleWidth ) / 2, bodyY, title, BLACK );
+
+  printPx( ( LCDWIDTH - promptWidth ) / 2, bodyY + lineHeight + lineGap, prompt, BLACK );
+  printSmallNavPx( 3, 56, "B:BACK", BLACK );
+  printSmallNavPx( LCDWIDTH - 3 - smallNavWidth( "A:DELETE" ), 56, "A:DELETE", BLACK );
+}
+
+
 int main(void)
 {
   uint8_t keys = 0xFF;
   uint8_t keysPrev;
   uint8_t n = 0;
+  uint8_t viewRow = 0;
   uint8_t i = 0;
   uint16_t addr = 0;
 
@@ -479,7 +670,7 @@ int main(void)
 
     if ( curMenu == MAIN ) {
       if ( !( keys & KEY_DOWN ) && ( keys != keysPrev ) ) {
-        if ( n < 1 ) {
+        if ( n < 2 ) {
           clearCursor( n );
           ++n;
           drawCursor( n );
@@ -496,6 +687,8 @@ int main(void)
 
       if ( !( keys & KEY_A ) && ( keys != keysPrev ) ) {
         if ( n == 0 ) {
+          curMenu = VIEW;
+        } else if ( n == 1 ) {
           curMenu = BACKUP;
         } else {
           curMenu = RESTORE;
@@ -504,6 +697,77 @@ int main(void)
         n = 0;
         drawMenu();
         drawCursor( n );
+      }
+
+    } else if ( curMenu == VIEW ) {
+      if ( !( keys & KEY_DOWN ) && ( keys != keysPrev ) ) {
+        if ( n < EEPROMSLOTS ) {
+          clearCursor( n );
+          ++n;
+          drawCursor( n );
+        }
+      }
+
+      if ( !( keys & KEY_UP ) && ( keys != keysPrev ) ) {
+        if ( n > 0 ) {
+          clearCursor( n );
+          --n;
+          drawCursor( n );
+        }
+      }
+
+      if ( !( keys & KEY_B ) && ( keys != keysPrev ) ) {
+        curMenu = MAIN;
+        n = 0;
+        drawMenu();
+        drawCursor( n );
+      } else if ( !( keys & KEY_A ) && ( keys != keysPrev ) ) {
+        curMenu = VIEW_RESULT;
+        viewRow = 0;
+        drawViewScreen( n );
+        drawViewCursor( viewRow, BLACK );
+      }
+
+    } else if ( curMenu == VIEW_RESULT ) {
+      if ( !( keys & KEY_DOWN ) && ( keys != keysPrev ) ) {
+        if ( viewRow < ( SAVECOUNT - 1 ) ) {
+          drawViewCursor( viewRow, WHITE );
+          ++viewRow;
+          drawViewCursor( viewRow, BLACK );
+        }
+      }
+
+      if ( !( keys & KEY_UP ) && ( keys != keysPrev ) ) {
+        if ( viewRow > 0 ) {
+          drawViewCursor( viewRow, WHITE );
+          --viewRow;
+          drawViewCursor( viewRow, BLACK );
+        }
+      }
+
+      if ( !( keys & KEY_B ) && ( keys != keysPrev ) ) {
+        curMenu = VIEW;
+        drawMenu();
+        drawCursor( n );
+      } else if ( n == 0 && !( keys & KEY_A ) && ( keys != keysPrev ) ) {
+        readViewBytes( n, 4 + viewRow * SAVEHEADERSIZE, SAVEHEADERSIZE );
+        if ( classifySaveHeader( readBuffer ) == SAVE_OCCUPIED ) {
+          curMenu = DELETE_CONFIRM;
+          drawDeleteScreen( n, viewRow );
+        }
+      }
+
+    } else if ( curMenu == DELETE_CONFIRM ) {
+      if ( ( !( keys & KEY_B ) || !( keys & KEY_A ) ) && ( keys != keysPrev ) ) {
+        // B takes precedence, including when both buttons are pressed.
+        if ( !( keys & KEY_A ) && ( keys & KEY_B ) && n == 0 ) {
+          // No success claim: even on failure, redraw the actual EEPROM.
+          // SLOT confirmations remain non-destructive.
+          deleteEEPROMHeader( n, viewRow );
+        }
+        curMenu = VIEW_RESULT;
+        drawViewScreen( n );
+        drawViewCursor( viewRow, BLACK );
       }
 
     } else if ( curMenu == BACKUP ) {
