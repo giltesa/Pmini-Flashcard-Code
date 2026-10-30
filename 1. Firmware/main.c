@@ -89,11 +89,12 @@
     // Address of the first EEPROM backup
     #define FLASHADDR ( PICO_FLASH_SIZE_BYTES - ( EEPROM_SIZE * EEPROM_SLOTS ) )
     // Offset of the currently loaded EEPROM backup on the RP2040
-    #define EEPROM_OFFSET 0x4000
+    #define EEPROM_OFFSET 0x6000
     // Size of the EEPROM manager program.
     #define EEPROM_MANAGER_SIZE 32768
 
     #define FLASH_CS_PIN 1
+    #define BLUE_LED_PIN 16
 
 #endif
 
@@ -190,7 +191,10 @@
     void __not_in_flash_func( enterUSBMode )() {
       // Start USB-related tasks.
       board_init();
-      tusb_init();
+      if ( tusb_init() ) {
+        // EEPROM backup USB storage is now active.
+        gpio_put( BLUE_LED_PIN, 1 );
+      }
 
       while ( 1 ) {
         tud_task();
@@ -595,6 +599,12 @@ void __not_in_flash_func( doPIOStuff() ) {
 }
 
 int main() {
+
+  #if defined(EEPROM_RESTORE)
+    gpio_init( BLUE_LED_PIN );
+    gpio_put( BLUE_LED_PIN, 0 );
+    gpio_set_dir( BLUE_LED_PIN, GPIO_OUT );
+  #endif
 
   // Set higher freq.
   sleep_ms(2);
