@@ -65,13 +65,13 @@
                         <div class="col">
                             <h2 data-i18n="games">Games</h2>
 
-                            <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop .min games here (max 512 KiB each)">
+                            <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop .min games here">
                                 <span data-i18n="dropzone">Drag & drop .min here or</span>
                                 <label class="btn btn-danger" for="fileInput" data-i18n="chooseFiles">Choose files</label>
                                 <input id="fileInput" type="file" accept=".min" multiple />
                             </div>
 
-                            <div class="hint" data-i18n="gamesHint">Max games: 20. Max file size: 512 KiB. Duplicates (same file or game code) are ignored.</div>
+                            <div class="hint" data-i18n="gamesHint">A single game up to 2 MiB, or multiple games up to 512 KiB each, with a maximum of 20 games.</div>
                         </div>
 
                         <!-- Firmware -->
@@ -89,7 +89,7 @@
                                 <input id="fwInput" type="file" accept=".uf2" />
                             </div>
 
-                            <div class="hint" id="fwInfo">Will try to auto-load from the same folder: <code>PM2040.uf2</code>.</div>
+                            <div class="hint" id="fwInfo">The appropriate firmware will be loaded automatically.</div>
 
                         </div>
 

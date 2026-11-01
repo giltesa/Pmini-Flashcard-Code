@@ -19,7 +19,7 @@ const LANGUAGES = {
     games: "Games",
     dropzone: "Drag & drop .min here or",
     chooseFiles: "Choose files",
-    gamesHint: "Max games: 20. Max file size: 512 KiB.",
+    gamesHint: "A single game up to 2 MiB, or multiple games up to 512 KiB each, with a maximum of 20 games.",
     includeEepromManager: "Include EEPROM Manager",
 
     // ===== Firmware =====
@@ -33,7 +33,7 @@ const LANGUAGES = {
     fwLocalPage: "Base firmware: local page — pick file manually",
     fwNotFound: "Base firmware: not found",
     fwPickManual: "Pick a base firmware manually.",
-    fwFileProtocolWarning: "Because this page is opened from your disk (file://), browsers block auto-loading. Click “Pick another…” or “Reload” to choose PM2040.uf2.",
+    fwFileProtocolWarning: "Because this page is opened from your disk (file://), browsers block automatic loading. Select a PM2040 firmware .uf2 file manually.",
 
     fwLoadedFrom: "Loaded from",
     fwLoadedDefault: "Loaded",
@@ -66,7 +66,9 @@ const LANGUAGES = {
     charNotAllowed: 'Character "{ch}" is not allowed.',
 
     maxGamesReached: "You can only add up to {max} games. Extra files will be ignored.",
-    fileTooLarge: '"{file}" exceeds 512 KiB and was skipped.',
+    fileTooLarge: "\"{file}\" exceeds the 2 MiB maximum and was skipped.",
+    multiromSizeLimit: "Games larger than 512 KiB must be used alone.",
+    manualSizeLimit: "Manual firmware allows at most 512 KiB per game. Remove larger games before selecting manual firmware.",
     noGamesAdded: "Add at least one .min game.",
     emptyNames: "Some names are empty.",
     uf2Only: "Only .uf2 is allowed.",
@@ -94,7 +96,7 @@ const LANGUAGES = {
     games: "Spiele",
     dropzone: ".min hier ablegen oder",
     chooseFiles: "Dateien wählen",
-    gamesHint: "Max. Spiele: 20. Max. Dateigröße: 512 KiB.",
+    gamesHint: "Ein einzelnes Spiel mit bis zu 2 MiB oder mehrere Spiele mit jeweils bis zu 512 KiB, maximal 20 Spiele.",
     includeEepromManager: "EEPROM Manager einschließen",
 
     firmware: "Basis-Firmware (UF2)",
@@ -107,7 +109,7 @@ const LANGUAGES = {
     fwLocalPage: "Firmware: lokale Seite — Datei manuell wählen",
     fwNotFound: "Basis-Firmware nicht gefunden",
     fwPickManual: "Bitte Firmware manuell auswählen.",
-    fwFileProtocolWarning: "Diese Seite wurde lokal geöffnet (file://), der Browser blockiert automatisches Laden. Bitte „Andere wählen…” oder „Neu laden“ verwenden.",
+    fwFileProtocolWarning: "Diese Seite wurde lokal geöffnet (file://), der Browser blockiert automatisches Laden. Wähle eine PM2040-Firmwaredatei im Format .uf2 manuell aus.",
 
     fwLoadedFrom: "Geladen von",
     fwLoadedDefault: "Geladen",
@@ -136,7 +138,9 @@ const LANGUAGES = {
     charNotAllowed: 'Zeichen "{ch}" ist nicht erlaubt',
 
     maxGamesReached: "Nur {max} Spiele erlaubt. Zusätzliche Dateien werden ignoriert.",
-    fileTooLarge: '"{file}" überschreitet 512 KiB und wurde übersprungen.',
+    fileTooLarge: "\"{file}\" überschreitet das Maximum von 2 MiB und wurde übersprungen.",
+    multiromSizeLimit: "Spiele über 512 KiB müssen einzeln verwendet werden.",
+    manualSizeLimit: "Manuelle Firmware erlaubt höchstens 512 KiB pro Spiel. Entferne größere Spiele vor der Auswahl.",
     noGamesAdded: "Mindestens eine .min-Datei hinzufügen.",
     emptyNames: "Einige Namen sind leer.",
     uf2Only: "Nur .uf2-Dateien erlaubt.",
@@ -164,7 +168,7 @@ const LANGUAGES = {
     games: "Juegos",
     dropzone: "Arrastra archivos .min aquí o",
     chooseFiles: "Seleccionar archivos",
-    gamesHint: "Máximo 20 juegos. Tamaño máximo: 512 KiB.",
+    gamesHint: "Un solo juego de hasta 2 MiB, o varios juegos de hasta 512 KiB cada uno, con un máximo de 20 juegos.",
     includeEepromManager: "Incluir EEPROM Manager",
 
     firmware: "Firmware base (UF2)",
@@ -177,7 +181,7 @@ const LANGUAGES = {
     fwLocalPage: "Firmware base: página local — selecciona el archivo manualmente",
     fwNotFound: "Firmware base: no encontrado",
     fwPickManual: "Selecciona el firmware manualmente.",
-    fwFileProtocolWarning: "Como esta página se abrió desde disco (file://), el navegador bloquea la carga automática. Usa “Elegir otro…” o “Recargar” para seleccionar PM2040.uf2.",
+    fwFileProtocolWarning: "Como esta página se abrió desde disco (file://), el navegador bloquea la carga automática. Selecciona manualmente un firmware PM2040 en formato .uf2.",
 
     fwLoadedFrom: "Cargado desde",
     fwLoadedDefault: "Cargado",
@@ -206,7 +210,9 @@ const LANGUAGES = {
     charNotAllowed: "Carácter no permitido",
 
     maxGamesReached: "Solo puedes añadir hasta {max} juegos. Los archivos extra serán ignorados.",
-    fileTooLarge: '"{file}" supera 512 KiB y se ha omitido.',
+    fileTooLarge: "\"{file}\" supera el máximo de 2 MiB y se ha omitido.",
+    multiromSizeLimit: "Los juegos de más de 512 KiB deben usarse solos.",
+    manualSizeLimit: "El firmware manual permite hasta 512 KiB por juego. Elimina los juegos mayores antes de seleccionarlo.",
     noGamesAdded: "Añade al menos un juego .min.",
     emptyNames: "Algunos nombres están vacíos.",
     uf2Only: "Solo se permiten archivos .uf2.",
@@ -234,7 +240,7 @@ const LANGUAGES = {
     games: "Jeux",
     dropzone: "Glissez-déposez des fichiers .min ici ou",
     chooseFiles: "Choisir des fichiers",
-    gamesHint: "Max jeux : 20. Taille max : 512 KiB.",
+    gamesHint: "Un seul jeu jusqu’à 2 MiB, ou plusieurs jeux jusqu’à 512 KiB chacun, avec un maximum de 20 jeux.",
     includeEepromManager: "Inclure EEPROM Manager",
 
     firmware: "Firmware de base (UF2)",
@@ -247,7 +253,7 @@ const LANGUAGES = {
     fwLocalPage: "Firmware : page locale — sélection manuelle requise",
     fwNotFound: "Firmware de base : introuvable",
     fwPickManual: "Veuillez sélectionner le firmware manuellement.",
-    fwFileProtocolWarning: "Cette page est ouverte depuis le disque (file://), le navigateur bloque le chargement automatique. Cliquez sur “Choisir un autre…” ou “Recharger”.",
+    fwFileProtocolWarning: "Cette page est ouverte depuis le disque (file://), le navigateur bloque le chargement automatique. Sélectionnez manuellement un fichier de firmware PM2040 au format .uf2.",
 
     fwLoadedFrom: "Chargé depuis",
     fwLoadedDefault: "Chargé",
@@ -276,7 +282,9 @@ const LANGUAGES = {
     charNotAllowed: 'Caractère "{ch}" non autorisé',
 
     maxGamesReached: "Vous ne pouvez ajouter que {max} jeux. Les fichiers supplémentaires seront ignorés.",
-    fileTooLarge: '"{file}" dépasse 512 KiB et a été ignoré.',
+    fileTooLarge: "\"{file}\" dépasse le maximum de 2 MiB et a été ignoré.",
+    multiromSizeLimit: "Les jeux de plus de 512 KiB doivent être utilisés seuls.",
+    manualSizeLimit: "Le firmware manuel autorise au maximum 512 KiB par jeu. Retirez les jeux plus grands avant de le sélectionner.",
     noGamesAdded: "Ajoutez au moins un fichier .min.",
     emptyNames: "Certains noms sont vides.",
     uf2Only: "Seuls les fichiers .uf2 sont autorisés.",
@@ -307,7 +315,7 @@ const LANGUAGES = {
     games: "Giochi",
     dropzone: ".min trascina qui o",
     chooseFiles: "Seleziona file",
-    gamesHint: "Max 20 giochi. Max 512 KiB per file.",
+    gamesHint: "Un solo gioco fino a 2 MiB, oppure più giochi fino a 512 KiB ciascuno, per un massimo di 20 giochi.",
     includeEepromManager: "Includi EEPROM Manager",
 
     // ===== Firmware =====
@@ -321,7 +329,7 @@ const LANGUAGES = {
     fwLocalPage: "Pagina locale — selezione manuale",
     fwNotFound: "Firmware non trovato",
     fwPickManual: "Seleziona il firmware manualmente.",
-    fwFileProtocolWarning: "File locale rilevato (file://), caricamento automatico bloccato.",
+    fwFileProtocolWarning: "File locale rilevato (file://), caricamento automatico bloccato. Seleziona manualmente un file firmware PM2040 in formato .uf2.",
 
     fwLoadedFrom: "Caricato da",
     fwLoadedDefault: "Caricato",
@@ -355,7 +363,9 @@ const LANGUAGES = {
     charNotAllowed: 'Carattere "{ch}" non consentito.',
 
     maxGamesReached: "Puoi aggiungere al massimo {max} giochi.",
-    fileTooLarge: '"{file}" supera 512 KiB ed è stato ignorato.',
+    fileTooLarge: "\"{file}\" supera il massimo di 2 MiB ed è stato ignorato.",
+    multiromSizeLimit: "I giochi oltre 512 KiB devono essere usati da soli.",
+    manualSizeLimit: "Il firmware manuale consente al massimo 512 KiB per gioco. Rimuovi i giochi più grandi prima di selezionarlo.",
     noGamesAdded: "Aggiungi almeno un gioco .min.",
     emptyNames: "Alcuni nomi sono vuoti.",
     uf2Only: "Sono consentiti solo file .uf2.",
@@ -383,7 +393,7 @@ const LANGUAGES = {
     games: "ゲーム",
     dropzone: ".minをドロップ または",
     chooseFiles: "ファイルを選択",
-    gamesHint: "最大20ゲーム。最大サイズ: 512 KiB。",
+    gamesHint: "2 MiBまでのゲームを1つ、または各512 KiBまでのゲームを最大20個使用できます。",
     includeEepromManager: "EEPROM Managerを含める",
 
     firmware: "ベースファームウェア (UF2)",
@@ -396,7 +406,7 @@ const LANGUAGES = {
     fwLocalPage: "ローカルページ検出 — 手動で選択してください",
     fwNotFound: "ベースファームウェアが見つかりません",
     fwPickManual: "ファームウェアを手動で選択してください。",
-    fwFileProtocolWarning: "このページはローカル(file://)から開かれています。自動読み込みはブロックされます。「別のファイル」または「再読み込み」を使用してください。",
+    fwFileProtocolWarning: "このページはローカル(file://)から開かれているため、自動読み込みはブロックされます。PM2040のファームウェアファイル（.uf2）を手動で選択してください。",
 
     fwLoadedFrom: "読み込み元",
     fwLoadedDefault: "読み込み完了",
@@ -425,7 +435,9 @@ const LANGUAGES = {
     charNotAllowed: '文字 "{ch}" は使用できません。',
 
     maxGamesReached: "追加できるゲームは最大{max}個です。超過分は無視されます。",
-    fileTooLarge: '"{file}" は512 KiBを超えているためスキップされました。',
+    fileTooLarge: "「{file}」は上限の2 MiBを超えるためスキップされました。",
+    multiromSizeLimit: "512 KiBを超えるゲームは単独で使用してください。",
+    manualSizeLimit: "手動ファームウェアは1ゲーム512 KiBまでです。選択する前に、それより大きいゲームを削除してください。",
     noGamesAdded: "少なくとも1つの.minゲームを追加してください。",
     emptyNames: "空の名前があります。",
     uf2Only: ".uf2ファイルのみ使用できます。",
@@ -456,7 +468,7 @@ const LANGUAGES = {
     games: "Games",
     dropzone: ".sleep .min bestanden hier of",
     chooseFiles: "Bestanden kiezen",
-    gamesHint: "Max 20 games. Max bestandsgrootte: 512 KiB.",
+    gamesHint: "Eén game tot 2 MiB, of meerdere games tot 512 KiB per game, met een maximum van 20 games.",
     includeEepromManager: "EEPROM Manager opnemen",
 
     // ===== Firmware =====
@@ -470,7 +482,7 @@ const LANGUAGES = {
     fwLocalPage: "Lokale modus — kies bestand handmatig",
     fwNotFound: "Firmware niet gevonden",
     fwPickManual: "Kies handmatig een firmwarebestand",
-    fwFileProtocolWarning: "Bestandspagina (file://) blokkeert automatisch laden",
+    fwFileProtocolWarning: "Deze pagina is lokaal geopend (file://), waardoor automatisch laden wordt geblokkeerd. Selecteer handmatig een PM2040-firmwarebestand in .uf2-formaat.",
 
     // ===== Game list =====
     gameList: "Gamelijst",
@@ -496,7 +508,9 @@ const LANGUAGES = {
 
     // ===== Alerts / runtime =====
     maxGamesAlert: "Je kunt nog {n} games toevoegen",
-    fileTooLarge: '"{file}" is te groot en is overgeslagen',
+    fileTooLarge: "\"{file}\" overschrijdt het maximum van 2 MiB en is overgeslagen.",
+    multiromSizeLimit: "Games groter dan 512 KiB moeten alleen worden gebruikt.",
+    manualSizeLimit: "Handmatige firmware staat maximaal 512 KiB per game toe. Verwijder grotere games voordat je deze selecteert.",
     noGames: "Voeg minstens 1 .min game toe",
     emptyNames: "Sommige namen zijn leeg",
 
@@ -527,7 +541,7 @@ const LANGUAGES = {
     games: "Gry",
     dropzone: ".min przeciągnij tutaj lub",
     chooseFiles: "Wybierz pliki",
-    gamesHint: "Maks. 20 gier. Maks. 512 KiB na plik.",
+    gamesHint: "Jedna gra do 2 MiB lub wiele gier do 512 KiB każda, maksymalnie 20 gier.",
     includeEepromManager: "Dołącz EEPROM Manager",
 
     // ===== Firmware =====
@@ -541,7 +555,7 @@ const LANGUAGES = {
     fwLocalPage: "Strona lokalna — wybór ręczny",
     fwNotFound: "Nie znaleziono firmware",
     fwPickManual: "Wybierz firmware ręcznie.",
-    fwFileProtocolWarning: "Wykryto plik lokalny (file://), automatyczne ładowanie zablokowane.",
+    fwFileProtocolWarning: "Wykryto plik lokalny (file://), automatyczne ładowanie jest zablokowane. Wybierz ręcznie plik firmware PM2040 w formacie .uf2.",
 
     fwLoadedFrom: "Załadowano z",
     fwLoadedDefault: "Załadowano",
@@ -575,7 +589,9 @@ const LANGUAGES = {
     charNotAllowed: 'Znak "{ch}" jest niedozwolony.',
 
     maxGamesReached: "Możesz dodać maksymalnie {max} gier.",
-    fileTooLarge: '"{file}" przekracza 512 KiB i został pominięty.',
+    fileTooLarge: "\"{file}\" przekracza limit 2 MiB i został pominięty.",
+    multiromSizeLimit: "Gry większe niż 512 KiB muszą być używane pojedynczo.",
+    manualSizeLimit: "Ręczny firmware pozwala na maks. 512 KiB na grę. Usuń większe gry przed jego wybraniem.",
     noGamesAdded: "Dodaj co najmniej jedną grę .min.",
     emptyNames: "Niektóre nazwy są puste.",
     uf2Only: "Dozwolone tylko pliki .uf2.",
@@ -603,7 +619,7 @@ const LANGUAGES = {
     games: "Jogos",
     dropzone: "Arraste .min aqui ou",
     chooseFiles: "Selecionar arquivos",
-    gamesHint: "Máx. 20 jogos. Máx. 512 KiB.",
+    gamesHint: "Um único jogo até 2 MiB, ou vários jogos até 512 KiB cada, com um máximo de 20 jogos.",
     includeEepromManager: "Incluir EEPROM Manager",
 
     firmware: "Firmware base (UF2)",
@@ -616,7 +632,7 @@ const LANGUAGES = {
     fwLocalPage: "Página local — seleção manual",
     fwNotFound: "Firmware não encontrado",
     fwPickManual: "Selecione o firmware manualmente.",
-    fwFileProtocolWarning: "Arquivo local detectado, carregamento automático bloqueado.",
+    fwFileProtocolWarning: "Arquivo local detectado (file://), carregamento automático bloqueado. Selecione manualmente um arquivo de firmware PM2040 no formato .uf2.",
 
     fwLoadedFrom: "Carregado de",
     fwLoadedDefault: "Carregado",
@@ -645,7 +661,9 @@ const LANGUAGES = {
     charNotAllowed: 'Caractere "{ch}" não permitido.',
 
     maxGamesReached: "Máximo de {max} jogos.",
-    fileTooLarge: '"{file}" excede 512 KiB.',
+    fileTooLarge: "\"{file}\" excede o máximo de 2 MiB e foi ignorado.",
+    multiromSizeLimit: "Jogos maiores que 512 KiB devem ser usados sozinhos.",
+    manualSizeLimit: "O firmware manual permite no máximo 512 KiB por jogo. Remova os jogos maiores antes de o selecionar.",
     noGamesAdded: "Adicione pelo menos um jogo.",
     emptyNames: "Há nomes vazios.",
     uf2Only: "Apenas arquivos .uf2.",
@@ -676,7 +694,7 @@ const LANGUAGES = {
     games: "เกม",
     dropzone: ".min ลากมาวางที่นี่ หรือ",
     chooseFiles: "เลือกไฟล์",
-    gamesHint: "สูงสุด 20 เกม ไฟล์ละไม่เกิน 512 KiB",
+    gamesHint: "เกมเดียวขนาดไม่เกิน 2 MiB หรือหลายเกมขนาดเกมละไม่เกิน 512 KiB รวมสูงสุด 20 เกม",
     includeEepromManager: "รวม EEPROM Manager",
 
     // ===== Firmware =====
@@ -690,7 +708,7 @@ const LANGUAGES = {
     fwLocalPage: "หน้าโลคัล — เลือกไฟล์เอง",
     fwNotFound: "ไม่พบเฟิร์มแวร์",
     fwPickManual: "กรุณาเลือกเฟิร์มแวร์ด้วยตนเอง",
-    fwFileProtocolWarning: "ตรวจพบโหมดไฟล์โลคัล (file://) การโหลดอัตโนมัติถูกบล็อก",
+    fwFileProtocolWarning: "ตรวจพบโหมดไฟล์โลคัล (file://) การโหลดอัตโนมัติถูกบล็อก โปรดเลือกไฟล์เฟิร์มแวร์ PM2040 รูปแบบ .uf2 ด้วยตนเอง",
 
     fwLoadedFrom: "โหลดจาก",
     fwLoadedDefault: "โหลดแล้ว",
@@ -724,7 +742,9 @@ const LANGUAGES = {
     charNotAllowed: 'ไม่อนุญาตตัวอักษร "{ch}"',
 
     maxGamesReached: "เพิ่มได้สูงสุด {max} เกม",
-    fileTooLarge: '"{file}" เกิน 512 KiB และถูกข้าม',
+    fileTooLarge: "\"{file}\" เกินขนาดสูงสุด 2 MiB และถูกข้าม",
+    multiromSizeLimit: "เกมที่ใหญ่กว่า 512 KiB ต้องใช้เพียงเกมเดียว",
+    manualSizeLimit: "เฟิร์มแวร์ที่เลือกเองจำกัดเกมละ 512 KiB โปรดลบเกมที่ใหญ่กว่านี้ก่อนเลือกเฟิร์มแวร์",
     noGamesAdded: "กรุณาเพิ่มไฟล์ .min อย่างน้อย 1 ไฟล์",
     emptyNames: "มีชื่อว่างอยู่",
     uf2Only: "รองรับเฉพาะไฟล์ .uf2",
@@ -755,7 +775,7 @@ const LANGUAGES = {
     games: "游戏",
     dropzone: ".min 拖放或",
     chooseFiles: "选择文件",
-    gamesHint: "最多20个游戏，单文件最大512 KiB。",
+    gamesHint: "单个游戏最大2 MiB，或多个游戏每个最大512 KiB，最多20个游戏。",
     includeEepromManager: "包含 EEPROM Manager",
 
     // ===== Firmware =====
@@ -769,7 +789,7 @@ const LANGUAGES = {
     fwLocalPage: "本地页面 — 手动选择",
     fwNotFound: "未找到固件",
     fwPickManual: "请手动选择固件。",
-    fwFileProtocolWarning: "本地文件模式（file://），自动加载被阻止。",
+    fwFileProtocolWarning: "本地文件模式（file://）下，自动加载被阻止。请手动选择PM2040固件的.uf2文件。",
 
     fwLoadedFrom: "加载来源",
     fwLoadedDefault: "已加载",
@@ -803,7 +823,9 @@ const LANGUAGES = {
     charNotAllowed: '字符 "{ch}" 不允许。',
 
     maxGamesReached: "最多只能添加{max}个游戏。",
-    fileTooLarge: '"{file}" 超过512 KiB，已跳过。',
+    fileTooLarge: "“{file}”超过2 MiB上限，已跳过。",
+    multiromSizeLimit: "大于512 KiB的游戏必须单独使用。",
+    manualSizeLimit: "手动固件每个游戏最大512 KiB。选择前请移除更大的游戏。",
     noGamesAdded: "请至少添加一个 .min 游戏。",
     emptyNames: "存在空名称。",
     uf2Only: "仅支持 .uf2 文件。",

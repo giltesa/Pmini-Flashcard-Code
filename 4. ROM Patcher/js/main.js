@@ -5,8 +5,8 @@
  * Handles drag & drop, table management, user preferences, and patch execution.
  *
  * Features:
- *  - Drag & drop support for up to 20 Pokémon Mini .min game files (≤ 512 KiB each).
- *  - Duplicate detection by file and by game code.
+ *  - Automatic SingleROM supports one game up to 2 MiB; MultiROM/manual games are limited to 512 KiB each.
+ *  - Duplicate detection by filename.
  *  - Automatic cover display (scaled).
  *  - Game table with reorder support via drag handle (≡).
  *  - Editable display names with charset enforcement and truncation to 14 chars on patch.
@@ -14,11 +14,11 @@
  *  - Uppercase toggle for display names.
  *  - Persistence of theme, name source, and uppercase toggle using localStorage.
  *  - Firmware management:
- *      · Auto-loads "PM2040.uf2" if present in the same folder.
+ *      · Automatically selects firmware from the numbered bundled ZIP variants.
  *      · Status indicator pill for firmware load success/error.
  *      · Option to reload default firmware or pick another UF2 file.
  *  - Clear button to reset the table.
- *  - Patch button to generate a multi-ROM firmware with empty slots padded.
+ *  - Patch button to generate patched UF2 firmware.
  *  - Responsive light/dark theme with consistent button styling.
  *  - Footer with generation date and attribution.
  *
@@ -33,12 +33,14 @@
 
 
 // ===== Constants =====
-const DEFAULT_FW_PATH   = 'firmware/PM2040.uf2';
+const FW_CAPACITIES     = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20];
 const EEPROM_MGR_PATH   = "assets/EEPROM Manager.min";
 const NAME_MIN          = 1;
 const NAME_MAX          = 14;
 const MAX_GAMES         = 20;
 const MAX_GAME_BYTES    = 512 * 1024;
+const SINGLE_ROM_BYTES  = 1024 * 1024;
+const MAX_SINGLE_BYTES  = 2 * 1024 * 1024;
 const LANG_KEY          = 'PM2040_lang';
 const THEME_KEY         = 'PM2040_theme';
 const CAPS_KEY          = 'PM2040_caps';
@@ -56,6 +58,11 @@ const ALLOWED_CHARS = " !#$%&'()*+,-.0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]
 
 // ===== State =====
 let baseFirmware = null; // ArrayBuffer
+let manualFirmware = false;
+let firmwareCapacity = null;
+let firmwareKey = null;
+let firmwareLoadId = 0;
+let eepromManagerLoadId = 0;
 let entries      = [];   // { id, filename, size, bytes:ArrayBuffer, name, nameSource:'filename'|'binary', binaryName:string|null, gameCode:string|null, gameId:string }
 let idSeq        = 1;
 
@@ -195,8 +202,43 @@ function setFwStatus(text, cls) {
 	el.className = 'pill' + (cls ? ' ' + cls : '');
 }
 
+// ===== ROM size / entry state =====
+function validateEntryState(proposed, manual = manualFirmware, includeManager = $('#eepromManagerToggle').checked) {
+    const games = proposed.filter(e => !e.isEepromManager);
+    const count = proposed.length + (includeManager && !proposed.some(e => e.isEepromManager) ? 1 : 0);
+    const oversized = games.find(e => e.size > MAX_SINGLE_BYTES);
+    if (oversized) {
+        alert(t('fileTooLarge', { file: oversized.filename }));
+        return false;
+    }
+    if (count > MAX_GAMES) {
+        alert(t('maxGamesReached', { max: MAX_GAMES }));
+        return false;
+    }
+    if (games.some(e => e.size > MAX_GAME_BYTES)) {
+        if (manual) {
+            alert(t('manualSizeLimit'));
+            return false;
+        }
+        if (count > 1 || includeManager) {
+            alert(t('multiromSizeLimit'));
+            return false;
+        }
+    }
+    return true;
+}
+
+function selectAutomaticFirmware() {
+    const capacity = FW_CAPACITIES.find(n => n >= Math.max(1, entries.length));
+    const extended = entries.length === 1 && !entries[0].isEepromManager &&
+        !$('#eepromManagerToggle').checked && entries[0].size > SINGLE_ROM_BYTES;
+    return { capacity, key: extended ? '1_2MB' : String(capacity) };
+}
+
 // ===== Firmware status =====
-async function tryLoadDefaultFirmware() {
+async function tryLoadDefaultFirmware(selection = selectAutomaticFirmware()) {
+    if (manualFirmware) return;
+
     if (location.protocol === 'file:') {
         // Browsers block fetch() of local files when the page is opened with file://
         setFwStatus(t('fwLocalPage'), 'err');
@@ -204,41 +246,37 @@ async function tryLoadDefaultFirmware() {
         return;
     }
 
+    const loadId = ++firmwareLoadId;
     setFwStatus(t('fwChecking'));
 
     try {
-        // --- 1) Try ZIP first ---
-        const zipPath = 'firmware/PM2040.zip';
-        let res = await fetch(zipPath);
-        if (res.ok) {
-            // Read entire ZIP into memory
-            const buf = new Uint8Array(await res.arrayBuffer());
-
-            // Decompress ZIP (fflate returns an object: { filename: Uint8Array })
-            const files = fflate.unzipSync(buf);
-
-            // Look for any file that ends with .uf2 inside the archive
-            const uf2File = Object.keys(files).find(f => f.toLowerCase().endsWith('.uf2'));
-            if (!uf2File) throw new Error(t('fwLoadedZipNoUF2'));
-
-            // Store extracted UF2 as ArrayBuffer
-            baseFirmware = files[uf2File].buffer;
-
-            setFwStatus(t('fwLoadedZip'), 'ok');
-            $('#fwInfo').textContent = t('fwLoadedFrom') + ` "${zipPath}" → ${uf2File} (${formatSize(baseFirmware.byteLength)}).`;
-            return;
-        }
-
-        // --- 2) Fallback to plain UF2 ---
-        res = await fetch(DEFAULT_FW_PATH);
+        const zipPath = `firmware/PM2040_${selection.key}.zip`;
+        const res = await fetch(zipPath);
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
-        baseFirmware = await res.arrayBuffer();
+        // Read entire ZIP into memory
+        const buf = new Uint8Array(await res.arrayBuffer());
 
-        setFwStatus(t('fwLoaded'), 'ok');
-        $('#fwInfo').textContent = t('fwLoadedDefault') + ` "${DEFAULT_FW_PATH}" (${formatSize(baseFirmware.byteLength)}).`;
+        // Decompress ZIP (fflate returns an object: { filename: Uint8Array })
+        const files = fflate.unzipSync(buf);
+
+        // Look for any file that ends with .uf2 inside the archive
+        const uf2File = Object.keys(files).find(f => f.toLowerCase().endsWith('.uf2'));
+        if (!uf2File) throw new Error(t('fwLoadedZipNoUF2'));
+        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware().key) return;
+
+        // Store extracted UF2 as ArrayBuffer
+        baseFirmware = files[uf2File].buffer;
+        firmwareCapacity = selection.capacity;
+        firmwareKey = selection.key;
+
+        setFwStatus(t('fwLoadedZip'), 'ok');
+        $('#fwInfo').textContent = t('fwLoadedFrom') + ` "${zipPath}" → ${uf2File} (${formatSize(baseFirmware.byteLength)}).`;
     } catch (e) {
-        // Both ZIP and UF2 failed
+        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware().key) return;
+        baseFirmware = null;
+        firmwareCapacity = null;
+        firmwareKey = null;
         setFwStatus(t('fwNotFound'), 'err');
         $('#fwInfo').textContent = t('fwPickManual');
         console.warn('Could not load default firmware:', e);
@@ -351,6 +389,11 @@ function syncEntriesFromDOM() {
 // ===== EEPROM Manager =====
 async function addEepromManager() {
 	if (entries.some(e => e.isEepromManager)) return;
+	if (!validateEntryState(entries, manualFirmware, true)) {
+		applyEepromManagerPreference(false);
+		return;
+	}
+	const loadId = ++eepromManagerLoadId;
 
 	if (entries.length >= MAX_GAMES) {
 		alert(t('maxGamesReached').replace('{max}', MAX_GAMES));
@@ -363,7 +406,11 @@ async function addEepromManager() {
 		if (!res.ok) throw new Error('HTTP ' + res.status);
 
 		const bytes = await res.arrayBuffer();
-		if (!$('#eepromManagerToggle').checked) return;
+		if (loadId !== eepromManagerLoadId || !$('#eepromManagerToggle').checked || entries.some(e => e.isEepromManager)) return;
+		if (!validateEntryState(entries, manualFirmware, true)) {
+			applyEepromManagerPreference(false);
+			return;
+		}
 
 		const filename = 'EEPROM Manager.min';
 		const gameCode = parseGameCodeFromHeader(bytes);
@@ -388,12 +435,14 @@ async function addEepromManager() {
 		appendRow(entry, true);
 		renumber();
 	} catch (e) {
+		if (loadId !== eepromManagerLoadId) return;
 		console.warn('[eeprom-manager-load-failed]', e);
         applyEepromManagerPreference(false);
 	}
 }
 
 function removeEepromManager() {
+	++eepromManagerLoadId;
 	const entry = entries.find(e => e.isEepromManager);
 	if (!entry) return;
 
@@ -415,19 +464,17 @@ async function addFiles(files) {
 	}
 
 	for (const file of list) {
-		if (file.size > MAX_GAME_BYTES) {
-			console.warn('[skip-large-game]', file.name, file.size);
-			alert(t('fileTooLarge').replace('{file}', file.name));
-			continue;
-		}
-		const bytes = await file.arrayBuffer();
 		const filename = file.name;
-
 		const nameKey = filename.toLowerCase();
+		if (entries.some(e => e.filename.toLowerCase() === nameKey)) continue;
+		if (!validateEntryState([...entries, { filename, size: file.size }])) continue;
+
+		const bytes = await file.arrayBuffer();
 		if (entries.some(e => e.filename.toLowerCase() === nameKey)) {
 			console.warn('[skip-duplicate-file]', filename);
 			continue;
 		}
+		if (!validateEntryState([...entries, { filename, size: bytes.byteLength }])) continue;
 
 		const gameCode = parseGameCodeFromHeader(bytes);
 		if (gameCode) console.log('[game-code]', gameCode);
@@ -650,6 +697,22 @@ function patchGameResumeBehavior(entry) {
 
 // ===== Patch orchestration =====
 async function runPatch() {
+	if (!validateEntryState(entries)) return;
+	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) {
+		await addEepromManager();
+	}
+	if (!validateEntryState(entries)) return;
+	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) return;
+	const selection = selectAutomaticFirmware();
+	if (!manualFirmware && (!baseFirmware || firmwareKey !== selection.key)) {
+		await tryLoadDefaultFirmware(selection);
+	}
+	if (!validateEntryState(entries)) return;
+	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) return;
+	if (!manualFirmware && baseFirmware && firmwareKey !== selectAutomaticFirmware().key) {
+		alert(t('fwLoadRequired'));
+		return;
+	}
 	if (!baseFirmware) {
 		if (location.protocol === 'file:') {
 			alert(t('fwFileModeAlert'));
@@ -686,7 +749,7 @@ async function runPatch() {
 	});
 
 	// Ensure remaining slots are cleared in firmware
-	window.ENTRIES = MAX_GAMES;
+	window.ENTRIES = manualFirmware ? MAX_GAMES : firmwareCapacity;
 
 	try {
 		if (typeof window.injectROMs === 'function') {
@@ -747,6 +810,7 @@ async function runPatch() {
 	fileInput.addEventListener('change', e => addFiles(e.target.files));
 
 	$('#btnClear').addEventListener('click', () => {
+		++eepromManagerLoadId;
 		entries = [];
 		$('#tbody').innerHTML = '';
 		applyEepromManagerPreference(false);
@@ -762,7 +826,18 @@ async function runPatch() {
 			setFwStatus(t('fwNotFound'), 'err');
 			return;
 		}
-		baseFirmware = await f.arrayBuffer();
+		if (!validateEntryState(entries, true)) {
+			e.target.value = '';
+			return;
+		}
+		const bytes = await f.arrayBuffer();
+		if (!validateEntryState(entries, true)) {
+			e.target.value = '';
+			return;
+		}
+		baseFirmware = bytes;
+		manualFirmware = true;
+		++firmwareLoadId;
 		setFwStatus(t('fwLoadedManual'), 'ok');
 		$('#fwInfo').textContent = t('fwLoadedFile') + ` "${f.name}" (${formatSize(baseFirmware.byteLength)}).`;
 	});
