@@ -1,3 +1,8 @@
+//For singlerom firmware
+/*const uint8_t rom[1048576] __attribute__((section(".romStorage"))) = {
+    'R', 'O', 'M', 'S', 'T', 'A', 'R', 'T'
+};*/
+
 // Generated from helloworld.min
 const uint8_t rom[ 67072 ] __attribute__ ((section(".romStorage"))) = {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
