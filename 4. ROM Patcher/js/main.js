@@ -263,8 +263,8 @@ async function tryLoadDefaultFirmware(selection = selectAutomaticFirmware()) {
         baseFirmware = null;
         firmwareCapacity = null;
         firmwareKey = null;
-        setFwStatus(t('eepromManagerNeedsGame'), 'err');
-        $('#fwInfo').textContent = t('eepromManagerNeedsGame');
+        setFwStatus(t('firmware'));
+        $('#fwInfo').textContent = '';
         return;
     }
     if (!selection) return;
