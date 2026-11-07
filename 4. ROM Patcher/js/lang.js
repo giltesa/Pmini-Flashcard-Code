@@ -21,6 +21,7 @@ const LANGUAGES = {
     chooseFiles: "Choose files",
     gamesHint: "A single game up to 2 MiB, or multiple games up to 512 KiB each, with a maximum of 20 games.",
     includeEepromManager: "Include EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager requires MultiROM mode. Add at least one more game to continue.",
 
     // ===== Firmware =====
     firmware: "Base firmware (UF2)",
@@ -98,6 +99,7 @@ const LANGUAGES = {
     chooseFiles: "Dateien wählen",
     gamesHint: "Ein einzelnes Spiel mit bis zu 2 MiB oder mehrere Spiele mit jeweils bis zu 512 KiB, maximal 20 Spiele.",
     includeEepromManager: "EEPROM Manager einschließen",
+    eepromManagerNeedsGame: "EEPROM Manager erfordert den MultiROM-Modus. Füge mindestens ein weiteres Spiel hinzu, um fortzufahren.",
 
     firmware: "Basis-Firmware (UF2)",
     reloadFirmware: "Firmware neu laden",
@@ -170,6 +172,7 @@ const LANGUAGES = {
     chooseFiles: "Seleccionar archivos",
     gamesHint: "Un solo juego de hasta 2 MiB, o varios juegos de hasta 512 KiB cada uno, con un máximo de 20 juegos.",
     includeEepromManager: "Incluir EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager requiere el modo MultiROM. Añade al menos un juego más para continuar.",
 
     firmware: "Firmware base (UF2)",
     reloadFirmware: "Recargar firmware",
@@ -242,6 +245,7 @@ const LANGUAGES = {
     chooseFiles: "Choisir des fichiers",
     gamesHint: "Un seul jeu jusqu’à 2 MiB, ou plusieurs jeux jusqu’à 512 KiB chacun, avec un maximum de 20 jeux.",
     includeEepromManager: "Inclure EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager nécessite le mode MultiROM. Ajoutez au moins un jeu supplémentaire pour continuer.",
 
     firmware: "Firmware de base (UF2)",
     reloadFirmware: "Recharger le firmware",
@@ -317,6 +321,7 @@ const LANGUAGES = {
     chooseFiles: "Seleziona file",
     gamesHint: "Un solo gioco fino a 2 MiB, oppure più giochi fino a 512 KiB ciascuno, per un massimo di 20 giochi.",
     includeEepromManager: "Includi EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager richiede la modalità MultiROM. Aggiungi almeno un altro gioco per continuare.",
 
     // ===== Firmware =====
     firmware: "Firmware base (UF2)",
@@ -395,6 +400,7 @@ const LANGUAGES = {
     chooseFiles: "ファイルを選択",
     gamesHint: "2 MiBまでのゲームを1つ、または各512 KiBまでのゲームを最大20個使用できます。",
     includeEepromManager: "EEPROM Managerを含める",
+    eepromManagerNeedsGame: "EEPROM ManagerにはMultiROMモードが必要です。続行するには、ゲームをもう1つ以上追加してください。",
 
     firmware: "ベースファームウェア (UF2)",
     reloadFirmware: "再読み込み",
@@ -470,6 +476,7 @@ const LANGUAGES = {
     chooseFiles: "Bestanden kiezen",
     gamesHint: "Eén game tot 2 MiB, of meerdere games tot 512 KiB per game, met een maximum van 20 games.",
     includeEepromManager: "EEPROM Manager opnemen",
+    eepromManagerNeedsGame: "EEPROM Manager vereist de MultiROM-modus. Voeg minstens één extra spel toe om door te gaan.",
 
     // ===== Firmware =====
     firmware: "Basisfirmware (UF2)",
@@ -543,6 +550,7 @@ const LANGUAGES = {
     chooseFiles: "Wybierz pliki",
     gamesHint: "Jedna gra do 2 MiB lub wiele gier do 512 KiB każda, maksymalnie 20 gier.",
     includeEepromManager: "Dołącz EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager wymaga trybu MultiROM. Dodaj co najmniej jedną dodatkową grę, aby kontynuować.",
 
     // ===== Firmware =====
     firmware: "Firmware bazowy (UF2)",
@@ -621,6 +629,7 @@ const LANGUAGES = {
     chooseFiles: "Selecionar arquivos",
     gamesHint: "Um único jogo até 2 MiB, ou vários jogos até 512 KiB cada, com um máximo de 20 jogos.",
     includeEepromManager: "Incluir EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager requer o modo MultiROM. Adicione pelo menos mais um jogo para continuar.",
 
     firmware: "Firmware base (UF2)",
     reloadFirmware: "Recarregar firmware",
@@ -696,6 +705,7 @@ const LANGUAGES = {
     chooseFiles: "เลือกไฟล์",
     gamesHint: "เกมเดียวขนาดไม่เกิน 2 MiB หรือหลายเกมขนาดเกมละไม่เกิน 512 KiB รวมสูงสุด 20 เกม",
     includeEepromManager: "รวม EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager ต้องใช้โหมด MultiROM เพิ่มเกมอีกอย่างน้อยหนึ่งเกมเพื่อดำเนินการต่อ",
 
     // ===== Firmware =====
     firmware: "เฟิร์มแวร์ฐาน (UF2)",
@@ -777,6 +787,7 @@ const LANGUAGES = {
     chooseFiles: "选择文件",
     gamesHint: "单个游戏最大2 MiB，或多个游戏每个最大512 KiB，最多20个游戏。",
     includeEepromManager: "包含 EEPROM Manager",
+    eepromManagerNeedsGame: "EEPROM Manager 需要 MultiROM 模式。请至少再添加一个游戏以继续。",
 
     // ===== Firmware =====
     firmware: "基础固件 (UF2)",

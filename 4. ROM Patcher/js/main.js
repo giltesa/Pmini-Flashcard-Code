@@ -228,7 +228,26 @@ function validateEntryState(proposed, manual = manualFirmware, includeManager = 
     return true;
 }
 
+function getROMSelection() {
+    const managerSelected = entries.some(e => e.isEepromManager) || $('#eepromManagerToggle').checked;
+    const normalGameCount = entries.filter(e => !e.isEepromManager).length;
+    const totalEntries = entries.length + (managerSelected && !entries.some(e => e.isEepromManager) ? 1 : 0);
+    return { managerSelected, normalGameCount, totalEntries };
+}
+
+function isManagerOnlySelection() {
+    const selection = getROMSelection();
+    return selection.managerSelected && selection.normalGameCount === 0;
+}
+
+function validatePatchSelection() {
+    if (!isManagerOnlySelection()) return true;
+    alert(t('eepromManagerNeedsGame'));
+    return false;
+}
+
 function selectAutomaticFirmware() {
+    if (isManagerOnlySelection()) return null;
     const capacity = FW_CAPACITIES.find(n => n >= Math.max(1, entries.length));
     const extended = entries.length === 1 && !entries[0].isEepromManager &&
         !$('#eepromManagerToggle').checked && entries[0].size > SINGLE_ROM_BYTES;
@@ -238,6 +257,17 @@ function selectAutomaticFirmware() {
 // ===== Firmware status =====
 async function tryLoadDefaultFirmware(selection = selectAutomaticFirmware()) {
     if (manualFirmware) return;
+
+    if (isManagerOnlySelection()) {
+        ++firmwareLoadId;
+        baseFirmware = null;
+        firmwareCapacity = null;
+        firmwareKey = null;
+        setFwStatus(t('eepromManagerNeedsGame'), 'err');
+        $('#fwInfo').textContent = t('eepromManagerNeedsGame');
+        return;
+    }
+    if (!selection) return;
 
     if (location.protocol === 'file:') {
         // Browsers block fetch() of local files when the page is opened with file://
@@ -263,7 +293,7 @@ async function tryLoadDefaultFirmware(selection = selectAutomaticFirmware()) {
         // Look for any file that ends with .uf2 inside the archive
         const uf2File = Object.keys(files).find(f => f.toLowerCase().endsWith('.uf2'));
         if (!uf2File) throw new Error(t('fwLoadedZipNoUF2'));
-        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware().key) return;
+        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware()?.key) return;
 
         // Store extracted UF2 as ArrayBuffer
         baseFirmware = files[uf2File].buffer;
@@ -273,7 +303,7 @@ async function tryLoadDefaultFirmware(selection = selectAutomaticFirmware()) {
         setFwStatus(t('fwLoadedZip'), 'ok');
         $('#fwInfo').textContent = t('fwLoadedFrom') + ` "${zipPath}" → ${uf2File} (${formatSize(baseFirmware.byteLength)}).`;
     } catch (e) {
-        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware().key) return;
+        if (manualFirmware || loadId !== firmwareLoadId || selection.key !== selectAutomaticFirmware()?.key) return;
         baseFirmware = null;
         firmwareCapacity = null;
         firmwareKey = null;
@@ -697,16 +727,19 @@ function patchGameResumeBehavior(entry) {
 
 // ===== Patch orchestration =====
 async function runPatch() {
+	if (!validatePatchSelection()) return;
 	if (!validateEntryState(entries)) return;
 	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) {
 		await addEepromManager();
 	}
+	if (!validatePatchSelection()) return;
 	if (!validateEntryState(entries)) return;
 	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) return;
 	const selection = selectAutomaticFirmware();
 	if (!manualFirmware && (!baseFirmware || firmwareKey !== selection.key)) {
 		await tryLoadDefaultFirmware(selection);
 	}
+	if (!validatePatchSelection()) return;
 	if (!validateEntryState(entries)) return;
 	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) return;
 	if (!manualFirmware && baseFirmware && firmwareKey !== selectAutomaticFirmware().key) {
