@@ -251,7 +251,7 @@ function selectAutomaticFirmware() {
     const capacity = FW_CAPACITIES.find(n => n >= Math.max(1, entries.length));
     const extended = entries.length === 1 && !entries[0].isEepromManager &&
         !$('#eepromManagerToggle').checked && entries[0].size > SINGLE_ROM_BYTES;
-    return { capacity, key: extended ? '1_2MB' : String(capacity) };
+    return { capacity, key: extended ? '1_2MB' : String(capacity), mode: capacity === 1 ? 'single' : 'multi' };
 }
 
 // ===== Firmware status =====
@@ -742,7 +742,8 @@ async function runPatch() {
 	if (!validatePatchSelection()) return;
 	if (!validateEntryState(entries)) return;
 	if ($('#eepromManagerToggle').checked && !entries.some(e => e.isEepromManager)) return;
-	if (!manualFirmware && baseFirmware && firmwareKey !== selectAutomaticFirmware().key) {
+	const currentSelection = selectAutomaticFirmware();
+	if (!manualFirmware && baseFirmware && firmwareKey !== currentSelection.key) {
 		alert(t('fwLoadRequired'));
 		return;
 	}
@@ -771,7 +772,11 @@ async function runPatch() {
 		return;
 	}
 
-	const ROMArray = entries.map(e => patchGameResumeBehavior(e));
+	// Only MultiROM needs resume compatibility fixes. Patch copies so a later
+	// SingleROM build still injects the original user ROM, even after MultiROM.
+	const ROMArray = entries.map(e => currentSelection.mode === 'multi'
+		? patchGameResumeBehavior({ ...e, bytes: e.bytes.slice(0) })
+		: e.bytes);
 
 	// Apply uppercase if toggle is on (patch-time), then enforce 14 chars
 	const caps = isCapsOn();
